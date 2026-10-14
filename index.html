@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Balap Kelereng 3D</title>
+<title>Balap Kelereng Kaca 3D</title>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -12,106 +12,100 @@
 </script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { height:100%; background:#05070f; overflow:hidden; font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif; }
+  html,body { height:100%; background:#aee2ff; overflow:hidden; font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif; }
   #c3d { position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none; }
-  /* ---------- name tags (billboard 3D->2D) ---------- */
-  #tags { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:3; }
-  .tag { position:absolute; transform:translate(-50%,-100%); white-space:nowrap;
-    font-size:12px; font-weight:800; color:#fff; padding:3px 9px; border-radius:12px;
-    background:rgba(5,10,25,.62); border:1px solid rgba(255,255,255,.28);
-    text-shadow:0 1px 2px rgba(0,0,0,.8); backdrop-filter:blur(2px); }
-  .tag.lead { background:rgba(255,180,0,.85); color:#231a00; border-color:#ffe082; font-size:13px; }
-  .tag .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:1px; }
-  /* ---------- HUD ---------- */
-  .hud { position:fixed; z-index:5; color:#fff; }
+  #labels { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:3; }
+  .hud { position:fixed; z-index:5; color:#3a2c18; }
+  /* panel terang segar */
   #topbar { top:10px; left:10px; right:10px; display:flex; align-items:center; gap:8px;
     padding:9px 14px; border-radius:16px;
-    background:rgba(10,18,38,.55); border:1px solid rgba(140,200,255,.25);
+    background:rgba(255,253,247,.82); border:1px solid rgba(188,108,37,.35);
     backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    box-shadow:0 8px 30px rgba(0,0,0,.45); }
-  #topbar .title { font-weight:900; font-size:16px; letter-spacing:.5px;
-    background:linear-gradient(180deg,#ffe082,#ff9800); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  #timer { margin-left:auto; font-variant-numeric:tabular-nums; font-weight:800; font-size:16px; color:#ffe082; }
-  #leader { font-weight:800; font-size:13px; background:rgba(255,193,7,.16);
-    border:1px solid rgba(255,193,7,.55); padding:4px 11px; border-radius:20px; white-space:nowrap; }
+    box-shadow:0 8px 26px rgba(120,70,20,.18); }
+  #topbar .title { font-weight:900; font-size:16px; letter-spacing:.5px; color:#9c5a1a; white-space:nowrap; }
+  #timer { margin-left:auto; font-variant-numeric:tabular-nums; font-weight:800; font-size:16px; color:#7a4a12; }
+  #leader { font-weight:800; font-size:13px; background:rgba(255,193,7,.25);
+    border:1px solid rgba(188,108,37,.55); padding:4px 11px; border-radius:20px; white-space:nowrap; color:#6b4210; }
   #board { top:66px; left:10px; padding:9px 12px; border-radius:14px; font-size:12.5px; font-weight:700;
-    line-height:1.75; min-width:170px; max-height:44vh; overflow:hidden auto;
-    background:rgba(10,18,38,.55); border:1px solid rgba(140,200,255,.25);
-    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+    line-height:1.75; min-width:168px; max-height:42vh; overflow:hidden auto;
+    background:rgba(255,253,247,.82); border:1px solid rgba(188,108,37,.35);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:#4a3220; }
   #board .row { cursor:pointer; padding:1px 6px; border-radius:8px; white-space:nowrap; }
-  #board .row:hover { background:rgba(255,255,255,.12); }
-  #board .row.lock { background:rgba(255,193,7,.25); outline:1px solid rgba(255,193,7,.6); }
-  #board .r1 { color:#ffd54f; } #board .r2 { color:#e8e8e8; } #board .r3 { color:#ffab91; }
+  #board .row:hover { background:rgba(188,108,37,.12); }
+  #board .row.lock { background:rgba(255,193,7,.35); outline:1px solid rgba(188,108,37,.6); }
+  #board .r1 { color:#b8860b; } #board .r2 { color:#5a5a5a; } #board .r3 { color:#a05a2c; }
   #cambtns { top:66px; right:10px; display:flex; flex-direction:column; gap:6px; }
-  .cambtn { border:1px solid rgba(140,200,255,.35); background:rgba(10,18,38,.6); color:#cfe6ff;
+  .cambtn { border:1px solid rgba(188,108,37,.4); background:rgba(255,253,247,.82); color:#7a4a12;
     font-weight:800; font-size:12px; padding:8px 12px; border-radius:12px; cursor:pointer;
     backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
-  .cambtn.on { background:rgba(41,182,246,.35); border-color:#29b6f6; color:#fff; }
+  .cambtn.on { background:rgba(255,193,7,.4); border-color:#b8860b; color:#5a3c0c; }
   #recBadge { top:66px; right:10px; display:none; align-items:center; gap:6px; margin-top:118px;
-    background:rgba(180,20,20,.88); font-weight:900; padding:6px 12px; border-radius:20px; font-size:13px; }
+    background:rgba(180,20,20,.88); color:#fff; font-weight:900; padding:6px 12px; border-radius:20px; font-size:13px; }
   #recBadge.on { display:flex; }
   #recBadge .dot { width:11px; height:11px; border-radius:50%; background:#fff; animation:pl 0.8s infinite; }
   @keyframes pl { 50% { opacity:.35; } }
+  #toast { top:120px; left:50%; transform:translateX(-50%); display:none; padding:8px 18px; border-radius:20px;
+    background:rgba(255,253,247,.92); border:1px solid rgba(188,108,37,.5); font-weight:900; font-size:14px;
+    color:#7a4a12; box-shadow:0 6px 20px rgba(120,70,20,.25); white-space:nowrap; }
+  #toast.on { display:block; animation:tin .25s; }
+  @keyframes tin { from { transform:translateX(-50%) scale(.8); opacity:0; } }
   #controls { bottom:12px; left:10px; right:10px; display:flex; gap:8px; padding:10px; border-radius:16px;
-    background:rgba(10,18,38,.55); border:1px solid rgba(140,200,255,.25);
+    background:rgba(255,253,247,.82); border:1px solid rgba(188,108,37,.35);
     backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
   .btn { flex:1; border:none; border-radius:12px; padding:13px 8px; font-size:15px; font-weight:900;
-    color:#fff; cursor:pointer; letter-spacing:.5px; box-shadow:0 4px 0 rgba(0,0,0,.35); }
+    color:#fff; cursor:pointer; letter-spacing:.5px; box-shadow:0 4px 0 rgba(0,0,0,.22); }
   .btn:active { transform:translateY(3px); box-shadow:none; }
-  #btnStart { background:linear-gradient(180deg,#66bb6a,#2e7d32); }
+  #btnStart { background:linear-gradient(180deg,#7cc47f,#3d8b40); }
   #btnStart:disabled { filter:grayscale(.8); opacity:.55; }
   #btnRec { background:linear-gradient(180deg,#ef5350,#b71c1c); }
   #btnRec.armed { animation:pl 1s infinite; }
-  #btnSound { background:linear-gradient(180deg,#5c6bc0,#283593); flex:.55; }
-  #btnCam { background:linear-gradient(180deg,#26a69a,#00695c); flex:.8; }
+  #btnSound { background:linear-gradient(180deg,#64a5d6,#2c5f8a); flex:.55; }
+  #btnCam { background:linear-gradient(180deg,#4db6ac,#0f766e); flex:.8; }
   #dlWrap { bottom:86px; left:0; right:0; display:none; justify-content:center; }
   #dlWrap.on { display:flex; }
   #btnDl { background:linear-gradient(180deg,#29b6f6,#0277bd); border:none; color:#fff; font-weight:900;
-    font-size:16px; padding:13px 30px; border-radius:14px; cursor:pointer; box-shadow:0 4px 0 rgba(0,0,0,.35); }
-  /* ---------- setup panel (glassmorphism) ---------- */
+    font-size:16px; padding:13px 30px; border-radius:14px; cursor:pointer; box-shadow:0 4px 0 rgba(0,0,0,.25); }
+  /* setup panel */
   #setup { position:fixed; z-index:8; left:50%; top:50%; transform:translate(-50%,-50%);
     width:min(92vw,430px); max-height:88vh; overflow:auto; border-radius:22px; padding:22px;
-    color:#fff; background:rgba(12,22,44,.62); border:1px solid rgba(140,200,255,.3);
+    color:#4a3220; background:rgba(255,253,247,.9); border:1px solid rgba(188,108,37,.4);
     backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
-    box-shadow:0 20px 70px rgba(0,0,0,.6); transition:opacity .3s, transform .3s; }
+    box-shadow:0 20px 70px rgba(120,70,20,.3); transition:opacity .3s, transform .3s; }
   #setup.hide { opacity:0; pointer-events:none; transform:translate(-50%,-46%) scale(.97); }
-  #setup h2 { font-size:20px; margin-bottom:4px;
-    background:linear-gradient(180deg,#ffe082,#ff9800); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  #setup p.sub { font-size:12.5px; color:#9fb8d8; margin-bottom:12px; }
-  #setup label { font-size:13px; font-weight:800; color:#cfe6ff; display:block; margin:10px 0 5px; }
-  #names { width:100%; height:150px; border-radius:12px; border:1px solid rgba(140,200,255,.3);
-    background:rgba(5,10,22,.6); color:#fff; font-size:14px; font-family:inherit; padding:10px; resize:vertical; }
+  #setup h2 { font-size:20px; margin-bottom:4px; color:#9c5a1a; }
+  #setup p.sub { font-size:12.5px; color:#8a6a45; margin-bottom:12px; }
+  #setup label { font-size:13px; font-weight:800; color:#7a4a12; display:block; margin:10px 0 5px; }
+  #names { width:100%; height:150px; border-radius:12px; border:1px solid rgba(188,108,37,.4);
+    background:#fffdf8; color:#4a3220; font-size:14px; font-family:inherit; padding:10px; resize:vertical; }
   #cntRow { display:flex; gap:8px; align-items:center; }
-  #cnt { width:70px; padding:9px; border-radius:10px; border:1px solid rgba(140,200,255,.3);
-    background:rgba(5,10,22,.6); color:#fff; font-size:15px; font-weight:800; text-align:center; }
+  #cnt { width:70px; padding:9px; border-radius:10px; border:1px solid rgba(188,108,37,.4);
+    background:#fffdf8; color:#4a3220; font-size:15px; font-weight:800; text-align:center; }
   .sbtn { border:none; border-radius:12px; padding:12px; font-size:14px; font-weight:900; color:#fff;
     cursor:pointer; margin-top:10px; width:100%; letter-spacing:.4px; }
-  #btnGo { background:linear-gradient(180deg,#66bb6a,#2e7d32); font-size:17px; padding:14px; }
-  #btnShuffle { background:linear-gradient(180deg,#5c6bc0,#283593); }
+  #btnGo { background:linear-gradient(180deg,#7cc47f,#3d8b40); font-size:17px; padding:14px; }
+  #btnShuffle { background:linear-gradient(180deg,#64a5d6,#2c5f8a); }
   #btnArmRec { background:linear-gradient(180deg,#ef5350,#b71c1c); }
   #btnArmRec.armed { animation:pl 1s infinite; }
-  /* ---------- countdown ---------- */
   #count { position:fixed; z-index:7; inset:0; display:none; align-items:center; justify-content:center;
     pointer-events:none; font-size:min(28vw,170px); font-weight:900; color:#fff;
-    text-shadow:0 0 40px rgba(255,180,0,.9), 0 6px 0 rgba(0,0,0,.4); }
+    text-shadow:0 0 40px rgba(255,180,0,.9), 0 6px 0 rgba(120,70,20,.5); }
   #count.on { display:flex; }
-  /* ---------- results modal ---------- */
   #podium { position:fixed; inset:0; z-index:9; display:none; align-items:center; justify-content:center;
-    background:rgba(3,7,16,.7); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+    background:rgba(60,40,15,.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
   #podium.on { display:flex; }
   #podCard { width:min(92vw,440px); max-height:86vh; overflow:auto; border-radius:22px; padding:24px;
-    text-align:center; color:#fff; background:rgba(14,26,50,.85);
-    border:2px solid rgba(255,202,40,.7); box-shadow:0 20px 70px rgba(0,0,0,.6); }
-  #podCard h2 { font-size:24px; color:#ffca28; margin-bottom:6px; letter-spacing:1px; }
-  #podCard .win { font-size:15px; color:#ffe082; margin-bottom:12px; font-weight:800; }
+    text-align:center; color:#4a3220; background:rgba(255,253,247,.95);
+    border:2px solid rgba(184,134,11,.7); box-shadow:0 20px 70px rgba(120,70,20,.35); }
+  #podCard h2 { font-size:24px; color:#9c5a1a; margin-bottom:6px; letter-spacing:1px; }
+  #podCard .win { font-size:15px; color:#7a4a12; margin-bottom:12px; font-weight:800; }
   .pr { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:10px; font-weight:800; font-size:14.5px; }
-  .pr:nth-child(odd) { background:rgba(255,255,255,.05); }
+  .pr:nth-child(odd) { background:rgba(188,108,37,.08); }
   .pdot { width:30px; height:30px; border-radius:50%; flex:none;
-    box-shadow:inset -4px -6px 0 rgba(0,0,0,.3), 0 3px 6px rgba(0,0,0,.4); }
-  .pr .tm { margin-left:auto; font-variant-numeric:tabular-nums; color:#ffe082; }
-  .pr .pos { width:34px; color:#9fb8d8; }
+    box-shadow:inset -4px -6px 0 rgba(0,0,0,.18), 0 3px 6px rgba(0,0,0,.25); }
+  .pr .tm { margin-left:auto; font-variant-numeric:tabular-nums; color:#7a4a12; }
+  .pr .pos { width:34px; color:#8a6a45; }
   #podBtns { display:flex; gap:8px; margin-top:14px; }
-  #btnAgain { background:linear-gradient(180deg,#66bb6a,#2e7d32); }
+  #btnAgain { background:linear-gradient(180deg,#7cc47f,#3d8b40); }
   #btnDl2 { background:linear-gradient(180deg,#29b6f6,#0277bd); }
   #err { position:fixed; z-index:20; bottom:4px; left:4px; right:4px; display:none;
     background:rgba(180,20,20,.92); color:#fff; font-size:11px; padding:6px 10px; border-radius:8px; }
@@ -119,20 +113,21 @@
 </head>
 <body>
 <canvas id="c3d"></canvas>
-<div id="tags"></div>
+<canvas id="labels"></canvas>
 
 <div id="topbar" class="hud">
-  <span class="title">🔮 BALAP KELERENG 3D</span>
+  <span class="title">🔮 BALAP KELERENG KACA</span>
   <span id="timer">⏱ 00:00.0</span>
   <span id="leader">👑 -</span>
 </div>
 <div id="board" class="hud">🏁 Menunggu…</div>
 <div id="cambtns" class="hud">
-  <button class="cambtn on" data-cam="leader">🎥 Auto Leader</button>
-  <button class="cambtn" data-cam="drone">🚁 Drone Pack</button>
-  <button class="cambtn" data-cam="orbit">🖱 Free Orbit</button>
+  <button class="cambtn on" data-cam="leader">🎥 Auto</button>
+  <button class="cambtn" data-cam="drone">🚁 Drone</button>
+  <button class="cambtn" data-cam="orbit">🖱 Bebas</button>
 </div>
 <div id="recBadge" class="hud"><span class="dot"></span><span id="recTime">REC 00:00</span></div>
+<div id="toast" class="hud"></div>
 <div id="dlWrap" class="hud"><button id="btnDl">⬇ UNDUH VIDEO</button></div>
 
 <div id="controls" class="hud">
@@ -143,8 +138,8 @@
 </div>
 
 <div id="setup">
-  <h2>🔮 BALAP KELERENG 3D</h2>
-  <p class="sub">Atur peserta, lalu mulai balapan. Panel otomatis mengecil saat balapan dimulai.</p>
+  <h2>🔮 Balap Kelereng Kaca 3D</h2>
+  <p class="sub">Lintasan kayu &amp; kelereng kaca asli. Panel otomatis mengecil saat balapan dimulai.</p>
   <label>📝 Daftar nama (satu per baris, 4–16):</label>
   <textarea id="names">MERAH
 OREN
@@ -160,7 +155,7 @@ MAGENTA
 COKLAT</textarea>
   <label>🔢 Jumlah kelereng:</label>
   <div id="cntRow"><input id="cnt" type="number" min="4" max="16" value="12">
-  <span style="font-size:12px;color:#9fb8d8">warna otomatis mengikuti urutan</span></div>
+  <span style="font-size:12px;color:#8a6a45">corak kaca otomatis bervariasi</span></div>
   <button id="btnGo" class="sbtn">▶ MULAI BALAPAN</button>
   <button id="btnShuffle" class="sbtn">🎲 ACAK LINTASAN</button>
   <button id="btnArmRec" class="sbtn">⏺ REKAM: OFF</button>
@@ -190,443 +185,571 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* ================= KONFIG ================= */
-const PALETTE = ['#e53935','#fb8c00','#c0ca33','#43a047','#00acc1','#1e88e5','#8e24aa','#ec407a',
-                 '#fdd835','#78909c','#d81b60','#6d4c41','#00e5ff','#ff5722','#9ccc65','#ba68c8'];
-const G = 14.0;               // gravitasi (kalibrasi: terasa berbobot & cepat)
-const ROLL_F = 0.28;          // rolling friction
-const DRAG = 0.0035;          // air drag
-const RAIL_REST = 0.55;       // restitusi pagar
-const TRACK_W = 8, HALF_W = 4;
-const MARBLE_R = 0.55;
-const FINISH_COUNT = 3;       // balapan selesai saat 3 finis
-const RACE_TIMEOUT = 240;
-
-const $ = id => document.getElementById(id);
-const clamp = (v,a,b) => v<a?a:v>b?b:v;
-const lerp = (a,b,t) => a+(b-a)*t;
+// 7 corak kelereng kaca tradisional
+const PATTERNS=[
+  {key:'cateye', name:'MATA KUCING', base:'#f4f8ff', swirl:'#e53935'},
+  {key:'susu',   name:'SUSU',        base:'#fdfdf5', swirl:'#1e88e5'},
+  {key:'marmer', name:'MERAH MARMER',base:'#c62828', swirl:'#ffffff'},
+  {key:'laut',   name:'BIRU LAUT',   base:'#0d47a1', swirl:'#80d8ff'},
+  {key:'zamrud', name:'HIJAU ZAMRUD',base:'#1b7a3d', swirl:'#b9f6ca'},
+  {key:'amber',  name:'KUNING AMBER',base:'#ef8f00', swirl:'#fff3c4'},
+  {key:'ungu',   name:'UNGU KACA',   base:'#5e2b97', swirl:'#e1bee7'},
+];
+const G=14.0, ROLL_F=0.28, DRAG=0.0035, RAIL_REST=0.55;
+const TRACK_W=8, HALF_W=4, MARBLE_R=0.55;
+const FINISH_COUNT=3, RACE_TIMEOUT=240;
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
 function fmtTime(s){ const m=Math.floor(s/60), ss=(s%60);
   return String(m).padStart(2,'0')+':'+ss.toFixed(1).padStart(4,'0'); }
 
-/* ================= AUDIO (Web Audio API) ================= */
-let AC=null, master=null, mediaDest=null, soundOn=true, rollGain=null;
+/* ================= AUDIO ALAMI (klak kaca & kayu) ================= */
+let AC=null, master=null, mediaDest=null, soundOn=true, rollGain=null, noiseBuf=null;
 function initAudio(){
-  if (AC) { if (AC.state==='suspended') AC.resume(); return; }
-  AC = new (window.AudioContext||window.webkitAudioContext)();
-  master = AC.createGain(); master.gain.value = 0.5;
+  if(AC){ if(AC.state==='suspended') AC.resume(); return; }
+  AC=new (window.AudioContext||window.webkitAudioContext)();
+  master=AC.createGain(); master.gain.value=0.5;
   master.connect(AC.destination);
-  mediaDest = AC.createMediaStreamDestination();
-  master.connect(mediaDest);
-  // rolling noise loop (gain diatur per-frame dari kecepatan)
-  const buf = AC.createBuffer(1, AC.sampleRate*1, AC.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
-  const src = AC.createBufferSource(); src.buffer=buf; src.loop=true;
-  const f = AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=320;
-  rollGain = AC.createGain(); rollGain.gain.value=0;
+  mediaDest=AC.createMediaStreamDestination(); master.connect(mediaDest);
+  noiseBuf=AC.createBuffer(1,AC.sampleRate*1,AC.sampleRate);
+  const d=noiseBuf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const src=AC.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+  const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=400;
+  rollGain=AC.createGain(); rollGain.gain.value=0;
   src.connect(f); f.connect(rollGain); rollGain.connect(master); src.start();
 }
-function beep(fr, dur=0.12, type='square', vol=0.25, when=0){
-  if (!AC || !soundOn) return;
-  const t = AC.currentTime + when;
-  const o = AC.createOscillator(), g = AC.createGain();
-  o.type=type; o.frequency.value=fr;
-  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
-  o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.02);
+// bunyi "klak/tik" kaca: bandpass noise burst + sine ping 0.03-0.05s
+function clack(intensity=1, woody=false){
+  if(!AC||!soundOn) return;
+  const t=AC.currentTime, v=clamp(0.22*intensity,0.03,0.5);
+  const n=AC.createBufferSource(); n.buffer=noiseBuf;
+  n.playbackRate.value=0.9+Math.random()*0.3;
+  const bp=AC.createBiquadFilter(); bp.type='bandpass';
+  bp.frequency.value=woody?900+Math.random()*300:2400+Math.random()*1400;
+  bp.Q.value=7;
+  const g=AC.createGain();
+  g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.05);
+  n.connect(bp); bp.connect(g); g.connect(master); n.start(t); n.stop(t+0.08);
+  const o=AC.createOscillator(); o.type='triangle';
+  o.frequency.value=woody?420+Math.random()*120:1700+Math.random()*900;
+  const g2=AC.createGain();
+  g2.gain.setValueAtTime(v*0.7,t); g2.gain.exponentialRampToValueAtTime(0.001,t+0.035);
+  o.connect(g2); g2.connect(master); o.start(t); o.stop(t+0.06);
 }
-function thock(intensity=1){
-  if (!AC || !soundOn) return;
-  const t = AC.currentTime;
-  const o = AC.createOscillator(), g = AC.createGain();
-  o.type='triangle'; o.frequency.setValueAtTime(300+Math.random()*200,t);
-  o.frequency.exponentialRampToValueAtTime(90,t+0.09);
-  const v = clamp(0.12*intensity,0.02,0.4);
-  g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.12);
-  o.connect(g); g.connect(master); o.start(t); o.stop(t+0.15);
+// peluit start: sine sweep naik
+function whistle(){
+  if(!AC||!soundOn) return;
+  const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(2100,t);
+  o.frequency.exponentialRampToValueAtTime(3400,t+0.45);
+  g.gain.setValueAtTime(0.28,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.6);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+0.65);
 }
-function boosterSfx(){ beep(220,0.35,'sawtooth',0.2); beep(440,0.3,'sawtooth',0.15,0.08); beep(880,0.35,'sawtooth',0.12,0.16); }
-function fanfare(){
-  if (!AC) return;
-  [523,659,784,1047,784,1047].forEach((f,i)=>beep(f,0.22,'triangle',0.3,i*0.14));
+// sorak kemenangan: arpeggio ceria + tepuk tangan (noise swell)
+function cheer(){
+  if(!AC||!soundOn) return;
+  [523,659,784,1047,1319].forEach((fr,i)=>{
+    const t=AC.currentTime+i*0.13, o=AC.createOscillator(), g=AC.createGain();
+    o.type='triangle'; o.frequency.value=fr;
+    g.gain.setValueAtTime(0.25,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+0.35);
+  });
+  for(let k=0;k<14;k++){
+    const t=AC.currentTime+Math.random()*1.1;
+    const n=AC.createBufferSource(); n.buffer=noiseBuf;
+    const bp=AC.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1800; bp.Q.value=1.2;
+    const g=AC.createGain();
+    g.gain.setValueAtTime(0.10,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.09);
+    n.connect(bp); bp.connect(g); g.connect(master); n.start(t); n.stop(t+0.12);
+  }
 }
-function countBeep(final){ beep(final?880:440, final?0.4:0.15, 'square', 0.3); }
+function countTick(fin){
+  if(!AC||!soundOn) return;
+  const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain();
+  o.type='sine'; o.frequency.value=fin?880:660;
+  g.gain.setValueAtTime(0.25,t); g.gain.exponentialRampToValueAtTime(0.001,t+(fin?0.4:0.12));
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+0.45);
+}
 
-/* ================= TRACK BUILDER ================= */
-let seed = (Math.random()*1e9)|0;
+/* ================= TRACK BUILDER (jalur kayu berkelok) ================= */
+let seed=(Math.random()*1e9)|0;
 function srand(){ seed=(seed*1664525+1013904223)>>>0; return seed/4294967296; }
-
-const track = { pts:[], s:[], total:0, pos:[], tan:[], side:[], up:[], curve:null, step:0.5 };
-const zones = {};   // s-ranges untuk rintangan
-let FINISH_S = 0;
-
-function buildTrack() {
-  track.pts.length = 0;
-  let x=0, y=92, z=0, ang=0;
+const track={pts:[],total:0,pos:[],tan:[],side:[],up:[],curve:null,step:0.5};
+const zones={};
+let FINISH_S=0;
+function buildTrack(){
+  track.pts.length=0;
+  let x=0,y=92,z=0,ang=0;
   const push=()=>track.pts.push(new THREE.Vector3(x,y,z));
   push();
-  function seg(len, dAngDeg, dy, jitter=0){
+  function seg(len,dAngDeg,dy,jitter=0){
     const dAng=dAngDeg*Math.PI/180, n=Math.max(2,Math.round(len/8));
     for(let i=0;i<n;i++){
-      ang += dAng/n + (jitter?(srand()-0.5)*jitter/n:0);
+      ang+=dAng/n+(jitter?(srand()-0.5)*jitter/n:0);
       const ds=len/n;
       x+=Math.sin(ang)*ds; z+=Math.cos(ang)*ds; y+=dy/n;
       push();
     }
   }
-  const jz=()=> (srand()-0.5)*24;   // variasi arah tiap lintasan acak
-  seg(50, 0, -3);                    // start straight
-  seg(70, 55+jz()*0.4, -8);          // tikungan kanan
-  seg(95, -12, -6);                  // zona pegboard (zig-zag)
-  seg(60, -52+jz()*0.4, -7);         // tikungan kiri
-  seg(95, 10, -6);                   // zona spinner
-  seg(115, 0, 0);                    // zona gelombang
-  seg(55, -18, -26);                 // turunan curam
-  seg(85, 12, -4);                   // zona booster
-  seg(95, -14, -6);                  // zona bumper
-  seg(50, 32, -4); seg(50, -32, -4);  // slalom
-  seg(65, 0, -2);                    // finish straight
-
-  // gelombang vertikal di zona waves (s 375..490)
-  const c0=new THREE.CatmullRomCurve3(track.pts);
-  const L0=c0.getLength();
-  // hitung s kasar dulu untuk menemukan zona waves
-  const tmpS=[]; let acc=0;
+  const jz=()=>(srand()-0.5)*24;
+  seg(50,0,-3); seg(70,55+jz()*0.4,-8); seg(95,-12,-6); seg(60,-52+jz()*0.4,-7);
+  seg(95,10,-6); seg(115,0,0); seg(55,-18,-26); seg(85,12,-4);
+  seg(95,-14,-6); seg(50,32,-4); seg(50,-32,-4); seg(65,0,-2);
+  let acc=0; const tmpS=[];
   for(let i=1;i<track.pts.length;i++){ acc+=track.pts[i].distanceTo(track.pts[i-1]); tmpS.push(acc); }
   for(let i=1;i<track.pts.length;i++){
     const s=tmpS[i-1];
-    if (s>375 && s<490) track.pts[i].y += 2.0*Math.sin((s-375)/115*Math.PI*4);
+    if(s>375&&s<490) track.pts[i].y+=2.0*Math.sin((s-375)/115*Math.PI*4);
   }
   track.curve=new THREE.CatmullRomCurve3(track.pts);
   track.total=track.curve.getLength();
-  // lookup table tiap 0.5m
   const N=Math.ceil(track.total/track.step)+1;
   track.pos=new Array(N); track.tan=new Array(N); track.side=new Array(N); track.up=new Array(N);
-  const up=new THREE.Vector3(0,1,0), T=new THREE.Vector3(), S=new THREE.Vector3(), U=new THREE.Vector3();
+  const up=new THREE.Vector3(0,1,0),T=new THREE.Vector3(),S=new THREE.Vector3(),U=new THREE.Vector3();
   for(let i=0;i<N;i++){
     const u=clamp(i*track.step/track.total,0,1);
     const p=track.curve.getPointAt(u);
     track.curve.getTangentAt(u,T);
-    S.crossVectors(up,T).normalize();
-    if (S.lengthSq()<0.5) S.set(1,0,0);
+    S.crossVectors(up,T).normalize(); if(S.lengthSq()<0.5) S.set(1,0,0);
     U.crossVectors(T,S).normalize();
     track.pos[i]=p.clone(); track.tan[i]=T.clone(); track.side[i]=S.clone(); track.up[i]=U.clone();
   }
   FINISH_S=track.total-22;
   zones.pegs=[128,215]; zones.spinners=[278,368]; zones.boost=[528,608]; zones.bump=[618,708];
 }
-function frameAt(s, out){
+function frameAt(s,out){
   const i=clamp(Math.round(s/track.step),0,track.pos.length-1);
   out.pos.copy(track.pos[i]); out.tan.copy(track.tan[i]);
   out.side.copy(track.side[i]); out.up.copy(track.up[i]);
   return out;
 }
 
-/* ================= SCENE ================= */
+/* ================= SCENE SIANG CERAH ================= */
 const canvas=$('c3d');
-const renderer=new THREE.WebGLRenderer({canvas, antialias:true});
-renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
-renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));   // optimasi 60fps
+renderer.shadowMap.enabled=false;                                   // ganti blob shadow
 renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.setSize(innerWidth,innerHeight);
 
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x05070f);
-scene.fog=new THREE.Fog(0x05070f, 60, 260);
+scene.background=new THREE.Color(0x9fd4f5);          // langit biru cerah
+scene.fog=new THREE.Fog(0xc4e4fa,80,340);
 
-const camera=new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.1, 1200);
+const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.1,1200);
 camera.position.set(0,100,40);
-
-const controls=new OrbitControls(camera, renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true; controls.dampingFactor=0.06;
-controls.maxDistance=220; controls.minDistance=4;
-controls.enabled=false;   // aktif hanya di mode Free Orbit
+controls.maxDistance=220; controls.minDistance=4; controls.enabled=false;
 
-// --- lighting: ambient + directional shadow + hemisphere ---
-scene.add(new THREE.AmbientLight(0x8fa8d0, 0.55));
-const hemi=new THREE.HemisphereLight(0xbdd4ff, 0x1a1430, 0.5); scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xfff2dd, 1.6);
-sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
-sun.shadow.camera.near=10; sun.shadow.camera.far=160;
-sun.shadow.camera.left=-45; sun.shadow.camera.right=45;
-sun.shadow.camera.top=45; sun.shadow.camera.bottom=-45;
-sun.shadow.bias=-0.0004;
-scene.add(sun); scene.add(sun.target);
+// pencahayaan matahari alami
+scene.add(new THREE.HemisphereLight(0xcfe8ff,0x8a7a5a,0.95));
+const sun=new THREE.DirectionalLight(0xfff1d6,1.5);   // hangat
+sun.position.set(60,90,30); scene.add(sun);
 
-// --- ground jauh + grid dekoratif ---
+// taman hijau di bawah + awan lembut
 {
   const g=new THREE.Mesh(new THREE.PlaneGeometry(1600,1600),
-    new THREE.MeshStandardMaterial({color:0x0a0e1a, roughness:1}));
-  g.rotation.x=-Math.PI/2; g.position.y=-14; g.receiveShadow=true; scene.add(g);
-  const grid=new THREE.GridHelper(1200, 60, 0x1c2f55, 0x111c33);
-  grid.position.y=-13.5; scene.add(grid);
+    new THREE.MeshStandardMaterial({color:0x7cc46a,roughness:1}));
+  g.rotation.x=-Math.PI/2; g.position.y=-14; scene.add(g);
+  const grid=new THREE.GridHelper(1200,60,0x5da24f,0x6fb45f);
+  grid.position.y=-13.5; grid.material.transparent=true; grid.material.opacity=0.35; scene.add(grid);
+  // awan: sprite blob putih
+  const cc=document.createElement('canvas'); cc.width=cc.height=128;
+  const cx=cc.getContext('2d');
+  const gr=cx.createRadialGradient(64,64,8,64,64,62);
+  gr.addColorStop(0,'rgba(255,255,255,.95)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+  cx.fillStyle=gr; cx.fillRect(0,0,128,128);
+  const ct=new THREE.CanvasTexture(cc);
+  for(let i=0;i<14;i++){
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ct,transparent:true,opacity:0.85,depthWrite:false}));
+    sp.position.set((Math.random()-0.5)*900,150+Math.random()*80,(Math.random()-0.5)*900);
+    const s=60+Math.random()*90; sp.scale.set(s,s*0.45,1); scene.add(sp);
+  }
 }
 
+function woodTexture(){
+  const c=document.createElement('canvas'); c.width=256; c.height=256;
+  const x=c.getContext('2d');
+  x.fillStyle='#d4a373'; x.fillRect(0,0,256,256);
+  for(let i=0;i<46;i++){   // serat kayu
+    x.strokeStyle='rgba(150,95,40,'+(0.05+Math.random()*0.10)+')';
+    x.lineWidth=1+Math.random()*2.5; x.beginPath();
+    const y0=Math.random()*256;
+    for(let px=0;px<=256;px+=16) x.lineTo(px,y0+Math.sin(px*0.03+i)*7);
+    x.stroke();
+  }
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
 let trackGroup=null;
 function checkerTex(){
   const c=document.createElement('canvas'); c.width=c.height=128;
-  const x=c.getContext('2d'), n=8, s=128/n;
-  for(let r=0;r<n;r++)for(let q=0;q<n;q++){ x.fillStyle=(r+q)%2?'#111':'#f5f5f5'; x.fillRect(q*s,r*s,s,s); }
+  const x=c.getContext('2d'),n=8,s=128/n;
+  for(let r=0;r<n;r++)for(let q=0;q<n;q++){ x.fillStyle=(r+q)%2?'#161616':'#f7f7f7'; x.fillRect(q*s,r*s,s,s); }
   const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
 }
 function buildTrackMesh(){
-  if (trackGroup) { scene.remove(trackGroup); trackGroup.traverse(o=>{o.geometry&&o.geometry.dispose();}); }
+  if(trackGroup){ scene.remove(trackGroup); trackGroup.traverse(o=>{o.geometry&&o.geometry.dispose();}); }
   trackGroup=new THREE.Group(); scene.add(trackGroup);
-  const N=track.pos.length, W2=HALF_W;
-  const vtx=new Float32Array(N*2*3), nrm=new Float32Array(N*2*3), uv=new Float32Array(N*2*2);
+  const N=track.pos.length,W2=HALF_W;
+  const vtx=new Float32Array(N*2*3),nrm=new Float32Array(N*2*3),uv=new Float32Array(N*2*2);
   const F={pos:new THREE.Vector3(),tan:new THREE.Vector3(),side:new THREE.Vector3(),up:new THREE.Vector3()};
   const curv=new Float32Array(N);
   for(let i=0;i<N;i++){
     frameAt(i*track.step,F);
-    const lx=F.pos.x-F.side.x*W2, ly=F.pos.y-F.side.y*W2, lz=F.pos.z-F.side.z*W2;
-    const rx=F.pos.x+F.side.x*W2, ry=F.pos.y+F.side.y*W2, rz=F.pos.z+F.side.z*W2;
-    vtx.set([lx,ly,lz, rx,ry,rz], i*6);
-    nrm.set([F.up.x,F.up.y,F.up.z, F.up.x,F.up.y,F.up.z], i*6);
-    uv.set([0,i*track.step/8, 1,i*track.step/8], i*4);
-    if(i>0&&i<N-1){
-      const a=track.tan[i-1], b=track.tan[i+1];
-      curv[i]=Math.acos(clamp(a.dot(b),-1,1))/ (2*track.step);
-    }
+    vtx.set([F.pos.x-F.side.x*W2,F.pos.y-F.side.y*W2,F.pos.z-F.side.z*W2,
+             F.pos.x+F.side.x*W2,F.pos.y+F.side.y*W2,F.pos.z+F.side.z*W2],i*6);
+    nrm.set([F.up.x,F.up.y,F.up.z,F.up.x,F.up.y,F.up.z],i*6);
+    uv.set([0,i*track.step/6,1,i*track.step/6],i*4);
+    if(i>0&&i<N-1){ const a=track.tan[i-1],b=track.tan[i+1];
+      curv[i]=Math.acos(clamp(a.dot(b),-1,1))/(2*track.step); }
   }
   const idx=[];
-  for(let i=0;i<N-1;i++){ const a=i*2; idx.push(a,a+1,a+2, a+1,a+3,a+2); }
+  for(let i=0;i<N-1;i++){ const a=i*2; idx.push(a,a+1,a+2,a+1,a+3,a+2); }
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.BufferAttribute(vtx,3));
   g.setAttribute('normal',new THREE.BufferAttribute(nrm,3));
   g.setAttribute('uv',new THREE.BufferAttribute(uv,2));
   g.setIndex(idx);
-  const roadMat=new THREE.MeshStandardMaterial({color:0x39445e, roughness:0.85, metalness:0.08});
-  const road=new THREE.Mesh(g,roadMat); road.receiveShadow=true; trackGroup.add(road);
-
-  // garis tengah putus-putus (strip tipis emissive)
-  {
-    const pts=[];
-    for(let i=0;i<N;i+=4){ const F2={pos:new THREE.Vector3(),tan:new THREE.Vector3(),side:new THREE.Vector3(),up:new THREE.Vector3()};
-      frameAt(i*track.step,F2); pts.push(new THREE.Vector3(F2.pos.x+F2.up.x*0.06, F2.pos.y+F2.up.y*0.06, F2.pos.z+F2.up.z*0.06)); }
-    const lg=new THREE.BufferGeometry().setFromPoints(pts);
-    trackGroup.add(new THREE.Line(lg,new THREE.LineDashedMaterial({color:0x9fb8d8,dashSize:2,gapSize:3,transparent:true,opacity:0.5})));
-    trackGroup.children[trackGroup.children.length-1].computeLineDistances();
-  }
-
-  // --- pagar pembatas: dinding rendah + neon rail guard di atasnya ---
-  // tinggi pagar naik di tikungan tajam (anti-out-of-bounds)
-  const railMat=new THREE.MeshStandardMaterial({color:0x223148, roughness:0.6, metalness:0.3, transparent:true, opacity:0.92});
-  const neonMat=new THREE.MeshBasicMaterial({color:0x00e5ff});
-  [-1,1].forEach(sideSign=>{
-    const wv=[], wuv=[];
-    const widx=[];
+  const wt=woodTexture(); wt.repeat.set(1,120);
+  const road=new THREE.Mesh(g,new THREE.MeshStandardMaterial({map:wt,roughness:0.72,metalness:0.02}));
+  trackGroup.add(road);
+  // list kayu di tepi papan (plank edges)
+  const edgeMat=new THREE.MeshStandardMaterial({color:0x8a5a28,roughness:0.8});
+  [-1,1].forEach(sg=>{
+    const ev=[],eidx=[];
     for(let i=0;i<N;i++){
       frameAt(i*track.step,F);
-      const hgt=0.9+clamp(curv[i]*22,0,1.1);   // tikungan tajam -> pagar lebih tinggi
-      const bx=F.pos.x+F.side.x*W2*sideSign, by=F.pos.y+F.side.y*W2*sideSign, bz=F.pos.z+F.side.z*W2*sideSign;
-      const ux=F.up.x, uy=F.up.y, uz=F.up.z;
-      wv.push(bx,by,bz, bx+ux*hgt,by+uy*hgt,bz+uz*hgt);
-      wuv.push(0,i*track.step/8, 1,i*track.step/8);
-      if(i<N-1){ const a=i*2; widx.push(a,a+2,a+1, a+1,a+2,a+3); }
+      const bx=F.pos.x+F.side.x*W2*sg,by=F.pos.y+F.side.y*W2*sg,bz=F.pos.z+F.side.z*W2*sg;
+      ev.push(bx,by,bz,bx,by-0.7,bz);
+      if(i<N-1){ const a=i*2; eidx.push(a,a+2,a+1,a+1,a+2,a+3); }
+    }
+    const eg=new THREE.BufferGeometry();
+    eg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(ev),3));
+    eg.setIndex(eidx); eg.computeVertexNormals();
+    trackGroup.add(new THREE.Mesh(eg,new THREE.MeshStandardMaterial({color:0x8a5a28,roughness:0.8,side:THREE.DoubleSide})));
+  });
+  // dinding pembatas kayu (lebih tinggi di tikungan tajam)
+  const wallMat=new THREE.MeshStandardMaterial({color:0xbc6c25,roughness:0.75});
+  const capMat=new THREE.MeshStandardMaterial({color:0x8a4d16,roughness:0.7});
+  [-1,1].forEach(sg=>{
+    const wv=[],widx=[];
+    const capPts=[];
+    for(let i=0;i<N;i++){
+      frameAt(i*track.step,F);
+      const hgt=1.0+clamp(curv[i]*22,0,1.2);
+      const bx=F.pos.x+F.side.x*W2*sg,by=F.pos.y+F.side.y*W2*sg,bz=F.pos.z+F.side.z*W2*sg;
+      wv.push(bx,by,bz,bx+F.up.x*hgt,by+F.up.y*hgt,bz+F.up.z*hgt);
+      if(i<N-1){ const a=i*2; widx.push(a,a+2,a+1,a+1,a+2,a+3); }
+      if(i%2===0) capPts.push(new THREE.Vector3(bx+F.up.x*(hgt+0.1),by+F.up.y*(hgt+0.1),bz+F.up.z*(hgt+0.1)));
     }
     const wg=new THREE.BufferGeometry();
     wg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(wv),3));
-    wg.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(wuv),2));
     wg.setIndex(widx); wg.computeVertexNormals();
-    const wall=new THREE.Mesh(wg,new THREE.MeshStandardMaterial({color:0x2a3a58,roughness:0.55,metalness:0.25,side:THREE.DoubleSide,transparent:true,opacity:0.85}));
-    wall.castShadow=true; trackGroup.add(wall);
-    // neon tube di puncak pagar
-    const topPts=[];
-    for(let i=0;i<N;i+=2){
-      frameAt(i*track.step,F);
-      const hgt=0.9+clamp(curv[i]*22,0,1.1);
-      topPts.push(new THREE.Vector3(F.pos.x+F.side.x*W2*sideSign+F.up.x*(hgt+0.08),
-        F.pos.y+F.side.y*W2*sideSign+F.up.y*(hgt+0.08), F.pos.z+F.side.z*W2*sideSign+F.up.z*(hgt+0.08)));
-    }
-    const tube=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(topPts),Math.ceil(N/2),0.14,8),neonMat);
-    trackGroup.add(tube);
+    trackGroup.add(new THREE.Mesh(wg,new THREE.MeshStandardMaterial({color:0xbc6c25,roughness:0.75,side:THREE.DoubleSide})));
+    const cap=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(capPts),Math.ceil(N/2),0.16,8),capMat);
+    trackGroup.add(cap);
   });
-
-  // --- garis start & finish checkerboard ---
+  // garis start & finish: bendera hitam-putih di atas kayu + gapura kayu
   const chk=checkerTex();
-  function gateAt(s, label, color){
+  function gateAt(s,label){
     frameAt(s,F);
-    const w=HALF_W*2, d=3;
-    const gg=new THREE.PlaneGeometry(w,d);
-    const m=new THREE.Mesh(gg,new THREE.MeshBasicMaterial({map:chk.clone()}));
+    const w=HALF_W*2,d=3;
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshBasicMaterial({map:chk.clone()}));
     m.material.map.repeat.set(6,1); m.material.map.needsUpdate=true;
     m.position.copy(F.pos).addScaledVector(F.up,0.07);
-    m.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),F.up);
-    // orientasikan searah lintasan
     const look=new THREE.Matrix4().lookAt(new THREE.Vector3(),F.tan.clone().negate(),F.up);
-    m.quaternion.setFromRotationMatrix(look);
-    m.rotateX(-Math.PI/2);
+    m.quaternion.setFromRotationMatrix(look); m.rotateX(-Math.PI/2);
     trackGroup.add(m);
-    // tiang + banner
-    const poleG=new THREE.CylinderGeometry(0.22,0.22,7,10);
-    const poleM=new THREE.MeshStandardMaterial({color:0x8a97ad,roughness:0.4,metalness:0.7});
-    [-1,1].forEach(sg=>{
+    const poleG=new THREE.CylinderGeometry(0.24,0.3,7.4,10);
+    const poleM=new THREE.MeshStandardMaterial({color:0x7a4d20,roughness:0.7});
+    [-1,1].forEach(sgg=>{
       const p=new THREE.Mesh(poleG,poleM);
-      p.position.copy(F.pos).addScaledVector(F.side,sg*(HALF_W+0.6)).addScaledVector(F.up,3.5);
-      p.castShadow=true; trackGroup.add(p);
+      p.position.copy(F.pos).addScaledVector(F.side,sgg*(HALF_W+0.7)).addScaledVector(F.up,3.7);
+      trackGroup.add(p);
     });
-    const bw=HALF_W*2+2.4;
-    const bg=new THREE.Mesh(new THREE.PlaneGeometry(bw,1.7),
-      new THREE.MeshBasicMaterial({color, side:THREE.DoubleSide}));
-    bg.position.copy(F.pos).addScaledVector(F.up,6.4);
-    const look2=new THREE.Matrix4().lookAt(new THREE.Vector3(),F.tan.clone().negate(),F.up);
-    bg.quaternion.setFromRotationMatrix(look2);
-    trackGroup.add(bg);
+    const bw=HALF_W*2+2.6;
+    const beam=new THREE.Mesh(new THREE.BoxGeometry(bw,0.5,0.5),poleM);
+    beam.position.copy(F.pos).addScaledVector(F.up,7.2);
+    const bl=new THREE.Matrix4().lookAt(new THREE.Vector3(),F.tan.clone().negate(),F.up);
+    beam.quaternion.setFromRotationMatrix(bl); beam.rotateY(Math.PI/2);
+    trackGroup.add(beam);
     const cv=document.createElement('canvas'); cv.width=512; cv.height=96;
-    const cx2=cv.getContext('2d'); cx2.fillStyle=color==0x111111?'#ffffff':'#111111';
-    cx2.font='900 64px Trebuchet MS'; cx2.textAlign='center'; cx2.textBaseline='middle';
-    cx2.fillText(label,256,50);
+    const cx2=cv.getContext('2d');
+    cx2.fillStyle='#fdf6e3'; cx2.fillRect(0,0,512,96);
+    cx2.fillStyle='#7a4d20'; cx2.font='900 60px Trebuchet MS';
+    cx2.textAlign='center'; cx2.textBaseline='middle'; cx2.fillText(label,256,52);
     const tx=new THREE.CanvasTexture(cv);
-    const tm=new THREE.Mesh(new THREE.PlaneGeometry(bw*0.92,1.45),
-      new THREE.MeshBasicMaterial({map:tx,transparent:true,side:THREE.DoubleSide}));
-    tm.position.copy(bg.position).addScaledVector(F.tan,0.06);
-    tm.quaternion.copy(bg.quaternion); trackGroup.add(tm);
+    const tm=new THREE.Mesh(new THREE.PlaneGeometry(bw*0.9,1.5),
+      new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide}));
+    tm.position.copy(F.pos).addScaledVector(F.up,6.1);
+    tm.quaternion.setFromRotationMatrix(bl);
+    trackGroup.add(tm);
   }
-  gateAt(8,'START',0x2e7d32);
-  gateAt(FINISH_S,'FINISH',0x111111);
+  gateAt(8,'START'); gateAt(FINISH_S,'FINISH');
 }
 
-/* ================= RINTANGAN 3D ================= */
-const pegs=[], spinners=[], boosters=[], bumpers=[];
+/* ================= RINTANGAN KLASIK ================= */
+const pegs=[],spinners=[],boosters=[],bumpers=[];
 let obsGroup=null;
-function clearObstacles(){ pegs.length=0; spinners.length=0; boosters.length=0; bumpers.length=0;
-  if(obsGroup){ scene.remove(obsGroup); obsGroup.traverse(o=>{o.geometry&&o.geometry.dispose();}); } obsGroup=new THREE.Group(); scene.add(obsGroup); }
+function clearObstacles(){ pegs.length=0;spinners.length=0;boosters.length=0;bumpers.length=0;
+  if(obsGroup){ scene.remove(obsGroup); obsGroup.traverse(o=>{o.geometry&&o.geometry.dispose();}); }
+  obsGroup=new THREE.Group(); scene.add(obsGroup); }
 const F2={pos:new THREE.Vector3(),tan:new THREE.Vector3(),side:new THREE.Vector3(),up:new THREE.Vector3()};
 function placeOnTrack(obj,s,lat,h=0){ frameAt(s,F2);
   obj.position.copy(F2.pos).addScaledVector(F2.side,lat).addScaledVector(F2.up,h); return F2; }
-
 function buildObstacles(){
   clearObstacles();
-  const pegMat=new THREE.MeshStandardMaterial({color:0xffb300,roughness:0.35,metalness:0.55});
-  const pegGeo=new THREE.CylinderGeometry(0.34,0.42,1.7,14);
-  // 1) PAKU SILINDER zig-zag
-  for(let s=zones.pegs[0]; s<zones.pegs[1]; s+=9){
+  // 1) PAKU KUNINGAN zig-zag
+  const brass=new THREE.MeshStandardMaterial({color:0xd8b13a,roughness:0.28,metalness:0.95});
+  const pegGeo=new THREE.CylinderGeometry(0.3,0.38,1.7,14);
+  const capGeo=new THREE.SphereGeometry(0.34,12,10);
+  for(let s=zones.pegs[0];s<zones.pegs[1];s+=9){
     const row=Math.round((s-zones.pegs[0])/9);
-    const lat=(row%2? -2.1:2.1) + (srand()-0.5)*0.6;
-    const m=new THREE.Mesh(pegGeo,pegMat);
-    placeOnTrack(m,s,lat,0.85); m.castShadow=true; obsGroup.add(m);
-    pegs.push({s,lat,r:0.42});
+    const lat=(row%2?-2.1:2.1)+(srand()-0.5)*0.6;
+    const grp=new THREE.Group();
+    const pin=new THREE.Mesh(pegGeo,brass); grp.add(pin);
+    const cap=new THREE.Mesh(capGeo,brass); cap.position.y=0.85; grp.add(cap);
+    placeOnTrack(grp,s,lat,0.85); obsGroup.add(grp);
+    pegs.push({s,lat,r:0.4});
   }
-  // 2) KINCIR/PALU BERPUTAR 3D
-  const armMat=new THREE.MeshStandardMaterial({color:0xe53935,roughness:0.4,metalness:0.35});
-  const hubMat=new THREE.MeshStandardMaterial({color:0x37474f,roughness:0.5,metalness:0.6});
+  // 2) KINCIR BALOK KAYU merah/biru klasik
+  const woodR=new THREE.MeshStandardMaterial({color:0xb03a2e,roughness:0.62});
+  const woodB=new THREE.MeshStandardMaterial({color:0x2e6da4,roughness:0.62});
+  const hubM=new THREE.MeshStandardMaterial({color:0x6e4a1f,roughness:0.6,metalness:0.2});
   [0.32,0.55,0.78].forEach((f,i)=>{
     const s=lerp(zones.spinners[0],zones.spinners[1],f);
     const grp=new THREE.Group();
-    const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,1.2,12),hubMat);
-    grp.add(hub);
-    const arm=new THREE.Mesh(new THREE.BoxGeometry(6.4,0.55,0.9),armMat);
-    arm.castShadow=true; grp.add(arm);
-    const tipG=new THREE.SphereGeometry(0.62,12,10);
-    [-3.2,3.2].forEach(x=>{ const t=new THREE.Mesh(tipG,armMat); t.position.x=x; grp.add(t); });
-    const fr=placeOnTrack(grp,s,0,1.15);
-    // orientasi grup mengikuti frame lintasan
-    const m4=new THREE.Matrix4().makeBasis(fr.side.clone(),fr.up.clone(),fr.tan.clone().negate());
-    grp.quaternion.setFromRotationMatrix(m4);
+    grp.add(new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,1.3,12),hubM));
+    const arm=new THREE.Mesh(new THREE.BoxGeometry(6.4,0.6,1.0),i%2?woodB:woodR);
+    grp.add(arm);
+    [-3.2,3.2].forEach(x=>{
+      const tip=new THREE.Mesh(new THREE.BoxGeometry(0.9,1.1,1.3),i%2?woodR:woodB);
+      tip.position.x=x; grp.add(tip);
+    });
+    const fr=placeOnTrack(grp,s,0,1.2);
+    grp.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(fr.side.clone(),fr.up.clone(),fr.tan.clone().negate()));
     obsGroup.add(grp);
-    spinners.push({s,lat:0,half:3.2,ang:srand()*6.28,spd:(1.6+srand()*0.9)*(i%2?-1:1),grp,fr:{side:fr.side.clone(),up:fr.up.clone()}});
+    spinners.push({s,lat:0,half:3.2,ang:srand()*6.28,spd:(1.6+srand()*0.9)*(i%2?-1:1),grp});
   });
-  // 3) SPEED BOOSTER PAD (menyala hijau/cyan)
+  // 3) BOOSTER PAD kayu + panah hijau
   const padGeo=new THREE.PlaneGeometry(5.6,9);
   for(let i=0;i<3;i++){
     const s=zones.boost[0]+14+i*24;
     const cv=document.createElement('canvas'); cv.width=128; cv.height=128;
     const c2=cv.getContext('2d');
-    const grd=c2.createLinearGradient(0,0,0,128);
-    grd.addColorStop(0,'#00ffcc'); grd.addColorStop(1,'#0099ff');
-    c2.fillStyle=grd; c2.fillRect(0,0,128,128);
-    c2.fillStyle='rgba(255,255,255,.85)';
-    for(let k=0;k<3;k++){ const y=20+k*36; c2.beginPath(); c2.moveTo(34,y); c2.lineTo(94,y+18); c2.lineTo(34,y+36); c2.closePath(); c2.fill(); }
+    c2.fillStyle='#8a5a28'; c2.fillRect(0,0,128,128);
+    c2.strokeStyle='#5a3a16'; c2.lineWidth=8; c2.strokeRect(4,4,120,120);
+    c2.fillStyle='#2ecc71';
+    for(let k=0;k<3;k++){ const y=18+k*36;
+      c2.beginPath(); c2.moveTo(34,y); c2.lineTo(94,y+18); c2.lineTo(34,y+36); c2.closePath(); c2.fill(); }
     const tx=new THREE.CanvasTexture(cv);
-    const m=new THREE.Mesh(padGeo,new THREE.MeshBasicMaterial({map:tx,transparent:true,opacity:0.95}));
+    const m=new THREE.Mesh(padGeo,new THREE.MeshBasicMaterial({map:tx}));
     const fr=placeOnTrack(m,s,0,0.09);
-    const look=new THREE.Matrix4().lookAt(new THREE.Vector3(),fr.tan.clone().negate(),fr.up);
-    m.quaternion.setFromRotationMatrix(look); m.rotateX(-Math.PI/2);
+    m.quaternion.setFromRotationMatrix(new THREE.Matrix4().lookAt(new THREE.Vector3(),fr.tan.clone().negate(),fr.up));
+    m.rotateX(-Math.PI/2);
     obsGroup.add(m);
-    // glow plane di bawah
-    const glow=new THREE.Mesh(padGeo,new THREE.MeshBasicMaterial({color:0x00ffcc,transparent:true,opacity:0.22}));
-    glow.position.copy(m.position).addScaledVector(fr.up,0.02); glow.quaternion.copy(m.quaternion);
-    obsGroup.add(glow);
-    boosters.push({s0:s-4.5,s1:s+4.5,lat:2.8,mesh:m,glow});
+    boosters.push({s0:s-4.5,s1:s+4.5,lat:2.8,mesh:m});
   }
-  // 4) BUMPER PINBALL silinder
+  // 4) BUMPER klasik merah/biru
   const bGeo=new THREE.CylinderGeometry(0.85,1.0,1.5,18);
-  const bMatA=new THREE.MeshStandardMaterial({color:0xff1744,roughness:0.3,metalness:0.4,emissive:0x550000});
-  const bMatB=new THREE.MeshStandardMaterial({color:0x2979ff,roughness:0.3,metalness:0.4,emissive:0x000533});
+  const bMatA=new THREE.MeshStandardMaterial({color:0xc0392b,roughness:0.45});
+  const bMatB=new THREE.MeshStandardMaterial({color:0x2471a3,roughness:0.45});
   for(let i=0;i<6;i++){
-    const s=zones.bump[0]+12+i*14;
-    const lat=(i%2? -1.9:1.9);
+    const s=zones.bump[0]+12+i*14, lat=(i%2?-1.9:1.9);
     const m=new THREE.Mesh(bGeo,i%2?bMatA:bMatB);
-    placeOnTrack(m,s,lat,0.75); m.castShadow=true; obsGroup.add(m);
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(0.95,0.1,8,24),
+    placeOnTrack(m,s,lat,0.75); obsGroup.add(m);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(0.95,0.09,8,24),
       new THREE.MeshBasicMaterial({color:0xffffff}));
     ring.position.copy(m.position); ring.rotation.x=Math.PI/2; obsGroup.add(ring);
     bumpers.push({s,lat,r:1.0,ring});
   }
 }
 
-/* ================= KELERENG (MeshPhysicalMaterial kaca) ================= */
-const marbles=[];
-let marbleGroup=null;
-function marbleTexture(hex){
+/* ================= CORAK KELERENG KACA TRADISIONAL ================= */
+function glassTexture(pat){
   const c=document.createElement('canvas'); c.width=c.height=256;
   const x=c.getContext('2d');
-  x.fillStyle=hex; x.fillRect(0,0,256,256);
-  // corak pusaran kontras ala kelereng kaca asli
-  x.strokeStyle='rgba(255,255,255,.85)'; x.lineCap='round';
-  for(let k=0;k<5;k++){
-    x.lineWidth=10+Math.random()*14; x.beginPath();
-    const y0=30+k*44;
-    for(let px=0;px<=256;px+=8) x.lineTo(px, y0+Math.sin(px*0.05+k)*22);
-    x.stroke();
+  x.fillStyle=pat.base; x.fillRect(0,0,256,256);
+  const R=(a,b)=>a+Math.random()*(b-a);
+  if(pat.key==='cateye'){
+    // mata kucing: pusaran putih + inti warna
+    for(let k=0;k<6;k++){ x.strokeStyle='rgba(255,255,255,.9)'; x.lineWidth=R(6,14); x.beginPath();
+      const y0=20+k*40; for(let px=0;px<=256;px+=8) x.lineTo(px,y0+Math.sin(px*0.05+k*2)*18); x.stroke(); }
+    const g=x.createRadialGradient(128,128,6,128,128,60);
+    g.addColorStop(0,pat.swirl); g.addColorStop(1,'rgba(255,255,255,0)');
+    x.fillStyle=g; x.fillRect(0,0,256,256);
+  } else if(pat.key==='susu'){
+    for(let k=0;k<7;k++){ x.strokeStyle=pat.swirl; x.globalAlpha=0.75; x.lineWidth=R(8,18); x.beginPath();
+      const y0=14+k*34; for(let px=0;px<=256;px+=8) x.lineTo(px,y0+Math.sin(px*0.04+k)*24); x.stroke(); }
+    x.globalAlpha=1;
+  } else {
+    // marmer: urat kontras acak
+    for(let k=0;k<9;k++){ x.strokeStyle='rgba(255,255,255,.8)'; x.lineWidth=R(3,9); x.beginPath();
+      let px=Math.random()*256,py=Math.random()*256; x.moveTo(px,py);
+      for(let s2=0;s2<6;s2++){ px+=R(-70,70); py+=R(-70,70); x.lineTo(px,py); } x.stroke(); }
+    for(let k=0;k<4;k++){ x.strokeStyle=pat.swirl; x.globalAlpha=0.5; x.lineWidth=R(10,20); x.beginPath();
+      const y0=Math.random()*256; for(let px=0;px<=256;px+=8) x.lineTo(px,y0+Math.sin(px*0.06+k)*20); x.stroke(); }
+    x.globalAlpha=1;
   }
-  x.fillStyle='rgba(255,255,255,.25)';
-  for(let k=0;k<30;k++){ x.beginPath(); x.arc(Math.random()*256,Math.random()*256,2+Math.random()*5,0,7); x.fill(); }
+  // highlight kaca
+  const hg=x.createLinearGradient(0,0,256,256);
+  hg.addColorStop(0,'rgba(255,255,255,.35)'); hg.addColorStop(0.4,'rgba(255,255,255,0)');
+  x.fillStyle=hg; x.fillRect(0,0,256,256);
   const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t;
 }
+function blobTexture(){
+  const c=document.createElement('canvas'); c.width=c.height=128;
+  const x=c.getContext('2d');
+  const g=x.createRadialGradient(64,64,6,64,64,62);
+  g.addColorStop(0,'rgba(40,20,5,.42)'); g.addColorStop(0.7,'rgba(40,20,5,.18)'); g.addColorStop(1,'rgba(40,20,5,0)');
+  x.fillStyle=g; x.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c);
+}
+const marbles=[];
+let marbleGroup=null, blobTex=null;
 function clearMarbles(){ marbles.length=0;
   if(marbleGroup){ scene.remove(marbleGroup); marbleGroup.traverse(o=>{o.geometry&&o.geometry.dispose();}); }
-  marbleGroup=new THREE.Group(); scene.add(marbleGroup); }
+  marbleGroup=new THREE.Group(); scene.add(marbleGroup);
+}
 function buildMarbles(names){
   clearMarbles();
-  const geo=new THREE.SphereGeometry(MARBLE_R,40,28);
+  if(!blobTex) blobTex=blobTexture();
+  const geo=new THREE.SphereGeometry(MARBLE_R,36,24);
+  const blobGeo=new THREE.PlaneGeometry(1.7,1.7);
   names.forEach((nm,i)=>{
-    const hex=PALETTE[i%PALETTE.length];
+    const pat=PATTERNS[i%PATTERNS.length];
     const mat=new THREE.MeshPhysicalMaterial({
-      map:marbleTexture(hex), roughness:0.08, metalness:0.0,
-      clearcoat:1.0, clearcoatRoughness:0.1,
-      ior:1.5, reflectivity:0.9,
-      emissive:new THREE.Color(hex), emissiveIntensity:0.06,
+      map:glassTexture(pat), roughness:0.08, metalness:0.1,
+      clearcoat:1.0, clearcoatRoughness:0.1, reflectivity:0.85,
     });
     const mesh=new THREE.Mesh(geo,mat);
-    mesh.castShadow=true; marbleGroup.add(mesh);
-    // motion trail (line)
-    const TN=36;
-    const tg=new THREE.BufferGeometry();
-    tg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(TN*3),3));
-    tg.setAttribute('color',new THREE.BufferAttribute(new Float32Array(TN*3),3));
-    const tl=new THREE.Line(tg,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.85,blending:THREE.AdditiveBlending}));
-    tl.frustumCulled=false; marbleGroup.add(tl);
-    const mb={ i, name:nm, color:hex, mesh, trail:tl, trailN:TN, trailPts:[],
-      s:2, lat:-3+6*(i/Math.max(1,names.length-1))+(Math.random()-0.5), h:0,
-      vs:0, vlat:0, vh:0, finished:false, finishTime:0,
-      stuckT:0, lastS:2, spin:new THREE.Vector3(),
-      tag:makeTag(nm,hex), boostCd:0 };
-    // acak urutan lateral biar adil
-    mb.lat=(Math.random()*2-1)*3;
+    marbleGroup.add(mesh);
+    // drop shadow decal (pengganti shadow map)
+    const blob=new THREE.Mesh(blobGeo,new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false}));
+    marbleGroup.add(blob);
+    const mb={ i,name:nm,pat,mesh,blob,
+      s:2,lat:(Math.random()*2-1)*3,h:0,vs:0,vlat:0,vh:0,
+      finished:false,finishTime:0,stuckT:0,lastS:2,boostCd:0,
+      prevRank:i, spinAxis:new THREE.Vector3(1,0,0) };
     marbles.push(mb);
   });
 }
-function makeTag(name,hex){
-  const el=document.createElement('div'); el.className='tag';
-  el.innerHTML='<span class="dot" style="background:'+hex+'"></span><span class="tx"></span>';
-  $('tags').appendChild(el); return el;
+
+/* ================= FISIKA (substep 1/60 stabil) ================= */
+const FR={pos:new THREE.Vector3(),tan:new THREE.Vector3(),side:new THREE.Vector3(),up:new THREE.Vector3()};
+const _v=new THREE.Vector3(), _p=new THREE.Vector3(), _q=new THREE.Quaternion();
+function marbleWorld(m,out){ frameAt(m.s,FR);
+  out.copy(FR.pos).addScaledVector(FR.side,m.lat).addScaledVector(FR.up,MARBLE_R+m.h); return out; }
+
+function physStep(dt){
+  const n=marbles.length;
+  for(const m of marbles){
+    if(m.finished) m.vs=Math.max(0,m.vs-8*dt);
+    frameAt(m.s,FR);
+    const slope=FR.tan.y;
+    let a=-G*slope-ROLL_F*Math.sign(m.vs)-DRAG*m.vs*Math.abs(m.vs);
+    if(m.finished) a-=4;
+    m.vs=Math.max(0,m.vs+a*dt);
+    m.s+=m.vs*dt;
+    m.vlat*=Math.max(0,1-2.2*dt);
+    m.lat+=m.vlat*dt;
+    const lim=HALF_W-MARBLE_R-0.15;
+    if(m.lat>lim){ m.lat=lim; if(m.vlat>0){ m.vlat=-m.vlat*RAIL_REST; clack(0.7,true); spark(marbleWorld(m,_v),5,0xd8b13a,4,3);} }
+    if(m.lat<-lim){ m.lat=-lim; if(m.vlat<0){ m.vlat=-m.vlat*RAIL_REST; clack(0.7,true); spark(marbleWorld(m,_v),5,0xd8b13a,4,3);} }
+    if(m.h>0||m.vh!==0){
+      m.vh-=G*1.6*dt; m.h+=m.vh*dt;
+      if(m.h<=0){ m.h=0; if(m.vh<-1.5){ clack(0.5,true); spark(marbleWorld(m,_v),4,0xffffff,3,2);} m.vh=Math.abs(m.vh)*0.4; if(m.vh<0.8)m.vh=0; }
+    }
+    hitObstacles(m,dt);
+    if(!m.finished&&m.s>=FINISH_S){
+      m.finished=true; m.finishTime=raceTime;
+      finishers.push(m); confetti(marbleWorld(m,_v)); cheer();
+      if(finishers.length>=FINISH_COUNT) endRace();
+    }
+    if(!m.finished){
+      if(m.s-m.lastS>0.5){ m.lastS=m.s; m.stuckT=0; }
+      else{ m.stuckT+=dt;
+        if(m.stuckT>2.5){
+          m.s=Math.max(2,m.lastS-2); m.lat*=0.3; m.h=0; m.vh=0; m.vlat=0; m.vs=6;
+          m.stuckT=0; spark(marbleWorld(m,_v),12,0xffd54f,6,6); clack(1.2);
+        } }
+      if(Math.abs(m.lat)>HALF_W+3||m.h<-4||!isFinite(m.s+m.lat)){
+        m.s=Math.max(2,m.lastS); m.lat=0; m.h=2; m.vh=0; m.vlat=0; m.vs=7; m.stuckT=0;
+      }
+    }
+    m.boostCd=Math.max(0,m.boostCd-dt);
+    // bola benar-benar menggelinding: rotasi sesuai kecepatan linear
+    if(m.vs>0.01){
+      _q.setFromAxisAngle(FR.side,-(m.vs/MARBLE_R)*dt);
+      m.mesh.quaternion.premultiply(_q);
+    }
+  }
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+    const a=marbles[i],b=marbles[j];
+    if(Math.abs(a.s-b.s)>2.5) continue;
+    const dx=b.s-a.s, dy=b.lat-a.lat, d2=dx*dx+dy*dy, rr=MARBLE_R*2;
+    if(d2<rr*rr&&d2>1e-6){
+      const d=Math.sqrt(d2),nx=dx/d,ny=dy/d,ov=(rr-d)/2;
+      a.s-=nx*ov; a.lat-=ny*ov; b.s+=nx*ov; b.lat+=ny*ov;
+      const avn=a.vs*nx+a.vlat*ny, bvn=b.vs*nx+b.vlat*ny, imp=(avn-bvn)*0.9;
+      if(imp>0){ a.vs-=nx*imp; a.vlat-=ny*imp; b.vs+=nx*imp; b.vlat+=ny*imp;
+        if(imp>2){ clack(imp*0.3); spark(marbleWorld(a,_v),5,0xffffff,4,3); } }
+    }
+  }
+}
+function hitObstacles(m,dt){
+  for(const p of pegs){
+    const ds=m.s-p.s; if(ds>2||ds<-2) continue;
+    const dx=ds,dy=m.lat-p.lat,d2=dx*dx+dy*dy,rr=p.r+MARBLE_R;
+    if(d2<rr*rr&&d2>1e-6){
+      const d=Math.sqrt(d2),nx=dx/d,ny=dy/d;
+      m.s=p.s+nx*rr; m.lat=p.lat+ny*rr;
+      const vn=m.vs*nx+m.vlat*ny;
+      if(vn<0){ m.vs-=1.55*vn*nx; m.vlat-=1.55*vn*ny; m.vh=Math.max(m.vh,1.2);
+        clack(-vn*0.5); spark(marbleWorld(m,_v),7,0xffd54f,5,4); }
+    }
+  }
+  for(const b of bumpers){
+    const ds=m.s-b.s; if(ds>2.4||ds<-2.4) continue;
+    const dx=ds,dy=m.lat-b.lat,d2=dx*dx+dy*dy,rr=b.r+MARBLE_R;
+    if(d2<rr*rr&&d2>1e-6){
+      const d=Math.sqrt(d2),nx=dx/d,ny=dy/d;
+      m.s=b.s+nx*rr; m.lat=b.lat+ny*rr;
+      const vn=m.vs*nx+m.vlat*ny;
+      if(vn<0){ m.vs-=1.9*vn*nx; m.vlat-=1.9*vn*ny; m.vs+=2.0; m.vh=Math.max(m.vh,2.2);
+        b.ring.scale.setScalar(1.35);
+        clack(-vn*0.8,true); spark(marbleWorld(m,_v),12,0xffffff,7,5); }
+    }
+  }
+  for(const sp of spinners){
+    const ds=m.s-sp.s; if(ds>4.5||ds<-4.5) continue;
+    const c=Math.cos(sp.ang),sn=Math.sin(sp.ang),dl=m.lat-sp.lat;
+    const lx=ds*c+dl*sn,ly=-ds*sn+dl*c,hw=0.75;
+    if(Math.abs(lx)<sp.half+MARBLE_R&&Math.abs(ly)<hw+MARBLE_R){
+      const sgn=ly>=0?1:-1,push=(hw+MARBLE_R-Math.abs(ly));
+      m.s+=-sn*push*sgn; m.lat+=c*push*sgn;
+      const tv=sp.spd*lx;
+      m.vs=Math.max(0,m.vs-sn*tv*0.9); m.vlat+=c*tv*0.9; m.vh=Math.max(m.vh,1.0);
+      clack(1.2,true); spark(marbleWorld(m,_v),6,0xffffff,5,4);
+    }
+  }
+  if(m.boostCd<=0) for(const bo of boosters){
+    if(m.s>bo.s0&&m.s<bo.s1&&Math.abs(m.lat)<bo.lat){
+      m.vs=Math.min(26,m.vs+22*dt+3.2); m.boostCd=0.4;
+      spark(marbleWorld(m,_v),10,0x2ecc71,6,5); clack(0.8);
+    }
+  }
 }
 
 /* ================= PARTIKEL ================= */
-const PMAX=420;
+const PMAX=380;
 const pGeo=new THREE.BufferGeometry();
-const pPos=new Float32Array(PMAX*3), pCol=new Float32Array(PMAX*3);
+const pPos=new Float32Array(PMAX*3),pCol=new Float32Array(PMAX*3);
 pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
 pGeo.setAttribute('color',new THREE.BufferAttribute(pCol,3));
 const points=new THREE.Points(pGeo,new THREE.PointsMaterial({size:0.5,vertexColors:true,transparent:true,opacity:0.95,blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -635,23 +758,16 @@ const parts=[]; for(let i=0;i<PMAX;i++) parts.push({life:0,x:0,y:0,z:0,vx:0,vy:0
 let pIdx=0;
 function spark(p,n,color,spd=6,up=4){
   const c=new THREE.Color(color);
-  for(let k=0;k<n;k++){
-    const q=parts[pIdx]; pIdx=(pIdx+1)%PMAX;
+  for(let k=0;k<n;k++){ const q=parts[pIdx]; pIdx=(pIdx+1)%PMAX;
     q.life=0.5+Math.random()*0.5; q.x=p.x; q.y=p.y; q.z=p.z;
-    const a=Math.random()*6.28, e=Math.random()*spd;
+    const a=Math.random()*6.28,e=Math.random()*spd;
     q.vx=Math.cos(a)*e; q.vz=Math.sin(a)*e; q.vy=Math.random()*up;
-    q.r=c.r; q.g=c.g; q.b=c.b;
-  }
+    q.r=c.r; q.g=c.g; q.b=c.b; }
 }
-function confetti(p){
-  const cols=[0xffd54f,0xef5350,0x29b6f6,0x66bb6a,0xffffff];
-  for(let k=0;k<60;k++) spark(p,1,cols[k%cols.length],9,10);
-}
+function confetti(p){ [0xffd54f,0xef5350,0x29b6f6,0x66bb6a,0xffffff].forEach(cc=>{ for(let k=0;k<12;k++) spark(p,1,cc,9,10); }); }
 function stepParticles(dt){
   for(let i=0;i<PMAX;i++){ const q=parts[i];
-    if(q.life>0){ q.life-=dt; q.vy-=12*dt;
-      q.x+=q.vx*dt; q.y+=q.vy*dt; q.z+=q.vz*dt;
-      if(q.y<0){q.y=0;q.vy*=-0.4;} }
+    if(q.life>0){ q.life-=dt; q.vy-=12*dt; q.x+=q.vx*dt; q.y+=q.vy*dt; q.z+=q.vz*dt; }
     const f=clamp(q.life*2,0,1);
     pPos[i*3]=q.x; pPos[i*3+1]=q.y; pPos[i*3+2]=q.z;
     pCol[i*3]=q.r*f; pCol[i*3+1]=q.g*f; pCol[i*3+2]=q.b*f;
@@ -659,219 +775,119 @@ function stepParticles(dt){
   pGeo.attributes.position.needsUpdate=true; pGeo.attributes.color.needsUpdate=true;
 }
 
-/* ================= FISIKA (track-space, stabil & cepat) ================= */
-const FR={pos:new THREE.Vector3(),tan:new THREE.Vector3(),side:new THREE.Vector3(),up:new THREE.Vector3()};
-const _v=new THREE.Vector3();
-function marbleWorld(m,out){ frameAt(m.s,FR);
-  out.copy(FR.pos).addScaledVector(FR.side,m.lat).addScaledVector(FR.up,MARBLE_R+m.h); return out; }
-
-function physStep(dt, t){
-  const n=marbles.length;
-  // 1) gerak maju + lateral + vertikal per kelereng
-  for(const m of marbles){
-    if(state!=='race') break;
-    if(m.finished){ m.vs=Math.max(0,m.vs-8*dt); }
-    frameAt(m.s,FR);
-    const slope=FR.tan.y;                    // <0 turunan, >0 tanjakan
-    let a=-G*slope - ROLL_F*Math.sign(m.vs) - DRAG*m.vs*Math.abs(m.vs);
-    if(m.finished) a-=4;
-    m.vs=Math.max(0,m.vs+a*dt);
-    m.s+=m.vs*dt;
-    // lateral: redaman + pagar dengan restitusi
-    m.vlat*=Math.max(0,1-2.2*dt);
-    m.lat+=m.vlat*dt;
-    const lim=HALF_W-MARBLE_R-0.15;
-    if(m.lat>lim){ m.lat=lim; if(m.vlat>0){ m.vlat=-m.vlat*RAIL_REST; thock(m.vlat); spark(marbleWorld(m,_v),6,0x00e5ff,4,3);} }
-    if(m.lat<-lim){ m.lat=-lim; if(m.vlat<0){ m.vlat=-m.vlat*RAIL_REST; thock(-m.vlat); spark(marbleWorld(m,_v),6,0x00e5ff,4,3);} }
-    // vertikal: pantulan kecil
-    if(m.h>0||m.vh!==0){
-      m.vh-=G*1.6*dt; m.h+=m.vh*dt;
-      if(m.h<=0){ m.h=0; if(m.vh<-1.5){ thock(-m.vh*0.4); spark(marbleWorld(m,_v),4,0xffffff,3,2);} m.vh=Math.abs(m.vh)*0.4; if(m.vh<0.8)m.vh=0; }
+/* ================= SMART LABELS (single 2D canvas overlay) ================= */
+const labCanvas=$('labels'), lctx=labCanvas.getContext('2d');
+let labDPR=1;
+function sizeLabels(){ labDPR=Math.min(window.devicePixelRatio||1,1.5);
+  labCanvas.width=innerWidth*labDPR; labCanvas.height=innerHeight*labDPR;
+  lctx.setTransform(labDPR,0,0,labDPR,0,0); }
+sizeLabels();
+const _pv=new THREE.Vector3();
+function drawLabels(){
+  lctx.clearRect(0,0,innerWidth,innerHeight);
+  if(state!=='race'&&state!=='podium') return;
+  const rank=[...marbles].sort((a,b)=>b.s-a.s);
+  const items=[];
+  rank.forEach((m,r)=>{
+    marbleWorld(m,_p); _p.y+=1.9; _pv.copy(_p).project(camera);
+    if(_pv.z>1) return;
+    items.push({m,r,x:(_pv.x*0.5+0.5)*innerWidth,y:(-_pv.y*0.5+0.5)*innerHeight});
+  });
+  // anti-tumpuk: hanya Top 5, geser vertikal bila < 26px + garis penunjuk
+  items.sort((a,b)=>a.y-b.y);
+  let lastY=-1e9;
+  for(const it of items){
+    it.oy=it.y; it.shift=0;
+    if(it.r<5){
+      if(it.y-lastY<26){ it.shift=26-(it.y-lastY); it.y+=it.shift; }
+      lastY=it.y;
     }
-    // rintangan
-    hitObstacles(m,dt,t);
-    // finish
-    if(!m.finished && m.s>=FINISH_S){
-      m.finished=true; m.finishTime=raceTime;
-      finishers.push(m); confetti(marbleWorld(m,_v)); fanfare();
-      if(finishers.length>=FINISH_COUNT) endRace();
-    }
-    // anti-stuck / auto-respawn tiap frame
-    if(!m.finished){
-      const prog=m.s-m.lastS;
-      if(prog>0.5){ m.lastS=m.s; m.stuckT=0; }
-      else { m.stuckT+=dt;
-        if(m.stuckT>2.5){ // respawn ke progres terakhir + dorongan
-          m.s=Math.max(2,m.lastS-2); m.lat*=0.3; m.h=0; m.vh=0; m.vlat=0; m.vs=6;
-          m.stuckT=0; spark(marbleWorld(m,_v),14,0xffd54f,6,6); thock(2);
-        }
-      }
-      // out-of-bounds: jatuh jauh dari lintasan
-      if(Math.abs(m.lat)>HALF_W+3||m.h<-4||!isFinite(m.s+m.lat)){
-        m.s=Math.max(2,m.lastS); m.lat=0; m.h=2; m.vh=0; m.vlat=0; m.vs=7; m.stuckT=0;
-      }
-    }
-    m.boostCd=Math.max(0,m.boostCd-dt);
   }
-  // 2) tabrakan antar kelereng (elastis sederhana)
-  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
-    const a=marbles[i],b=marbles[j];
-    if(Math.abs(a.s-b.s)>2.5) continue;
-    frameAt((a.s+b.s)/2,FR);
-    const ax=a.lat,bx=b.lat, as=a.s,bs=b.s;
-    let dx=(bs-as), dy=(bx-ax);           // ruang (s,lat) ~ meter
-    const d2=dx*dx+dy*dy, rr=MARBLE_R*2;
-    if(d2<rr*rr&&d2>1e-6){
-      const d=Math.sqrt(d2), nx=dx/d, ny=dy/d, ov=(rr-d)/2;
-      a.s-=nx*ov; a.lat-=ny*ov; b.s+=nx*ov; b.lat+=ny*ov;
-      const avn=a.vs*nx+a.vlat*ny, bvn=b.vs*nx+b.vlat*ny;
-      const imp=(avn-bvn)*0.9;
-      if(imp>0){
-        a.vs-=nx*imp; a.vlat-=ny*imp; b.vs+=nx*imp; b.vlat+=ny*imp;
-        if(imp>2){ thock(imp*0.35); marbleWorld(a,_v); spark(_v,5,0xffffff,4,3); }
+  for(const it of items){
+    const {m,r,x}=it; const y=it.y;
+    lctx.textAlign='center'; lctx.textBaseline='middle';
+    if(r<5){
+      const txt=(r===0?'👑 #1 ':'#'+(r+1)+' ')+m.name;
+      lctx.font='800 11px Trebuchet MS';
+      const w=lctx.measureText(txt).width+28;
+      if(it.shift>0){
+        lctx.strokeStyle='rgba(60,40,15,.55)'; lctx.lineWidth=1;
+        lctx.beginPath(); lctx.moveTo(x,it.oy+8); lctx.lineTo(x,y-11); lctx.stroke();
       }
+      lctx.fillStyle='rgba(255,253,247,.94)';
+      lctx.strokeStyle=r===0?'#b8860b':'rgba(150,110,60,.6)'; lctx.lineWidth=r===0?2:1;
+      lctx.beginPath(); lctx.roundRect(x-w/2,y-11,w,22,11); lctx.fill(); lctx.stroke();
+      lctx.fillStyle=dotColor(m);
+      lctx.beginPath(); lctx.arc(x-w/2+12,y,5.5,0,7); lctx.fill();
+      lctx.fillStyle='#1d1d1d'; lctx.fillText(txt,x+6,y+0.5);
+    } else {
+      // #6 ke bawah: bulatan nomor kecil
+      lctx.fillStyle='rgba(255,253,247,.88)';
+      lctx.strokeStyle='rgba(150,110,60,.55)'; lctx.lineWidth=1;
+      lctx.beginPath(); lctx.arc(x,y,10,0,7); lctx.fill(); lctx.stroke();
+      lctx.fillStyle='#1d1d1d'; lctx.font='800 10px Trebuchet MS';
+      lctx.fillText('#'+(r+1),x,y+0.5);
     }
   }
 }
-function hitObstacles(m,dt,t){
-  // paku silinder
-  for(const p of pegs){
-    const ds=m.s-p.s; if(ds>2||ds<-2) continue;
-    const dx=ds, dy=m.lat-p.lat, d2=dx*dx+dy*dy, rr=p.r+MARBLE_R;
-    if(d2<rr*rr&&d2>1e-6){
-      const d=Math.sqrt(d2),nx=dx/d,ny=dy/d;
-      m.s=p.s+nx*rr; m.lat=p.lat+ny*rr;
-      const vn=m.vs*nx+m.vlat*ny;
-      if(vn<0){ m.vs-=1.55*vn*nx; m.vlat-=1.55*vn*ny;
-        m.vh=Math.max(m.vh,1.2);
-        thock(-vn*0.5); spark(marbleWorld(m,_v),7,0xffb300,5,4); }
-    }
-  }
-  // bumper pinball: pantulan kuat
-  for(const b of bumpers){
-    const ds=m.s-b.s; if(ds>2.4||ds<-2.4) continue;
-    const dx=ds, dy=m.lat-b.lat, d2=dx*dx+dy*dy, rr=b.r+MARBLE_R;
-    if(d2<rr*rr&&d2>1e-6){
-      const d=Math.sqrt(d2),nx=dx/d,ny=dy/d;
-      m.s=b.s+nx*rr; m.lat=b.lat+ny*rr;
-      const vn=m.vs*nx+m.vlat*ny;
-      if(vn<0){ const kick=1.9;
-        m.vs-=kick*vn*nx; m.vlat-=kick*vn*ny;
-        m.vs+=2.0; m.vh=Math.max(m.vh,2.2);
-        b.ring.scale.setScalar(1.35);
-        thock(-vn*0.8); boosterSfx(); spark(marbleWorld(m,_v),12,0xff1744,7,5); }
-    }
-  }
-  // kincir berputar: dorong sesuai arah putar
-  for(const sp of spinners){
-    const ds=m.s-sp.s; if(ds>4.5||ds<-4.5) continue;
-    const c=Math.cos(sp.ang), sn=Math.sin(sp.ang);
-    const dl=m.lat-sp.lat;
-    const lx=ds*c+dl*sn, ly=-ds*sn+dl*c;   // ke frame lokal bilah
-    const hw=0.75;
-    if(Math.abs(lx)<sp.half+MARBLE_R && Math.abs(ly)<hw+MARBLE_R){
-      const sgn=ly>=0?1:-1;
-      const push=(hw+MARBLE_R-Math.abs(ly));
-      m.s+=-sn*push*sgn; m.lat+=c*push*sgn;   // kembali ke frame lintasan
-      // kecepatan tangensial ujung bilah -> dorong kelereng
-      const tv=sp.spd*lx;
-      m.vs+=-sn*tv*0.9; m.vlat+=c*tv*0.9;
-      m.vs=Math.max(0,m.vs); m.vh=Math.max(m.vh,1.0);
-      thock(1.4); spark(marbleWorld(m,_v),6,0xe53935,5,4);
-    }
-  }
-  // booster pad: dorongan kecepatan
-  if(m.boostCd<=0) for(const bo of boosters){
-    if(m.s>bo.s0&&m.s<bo.s1&&Math.abs(m.lat)<bo.lat){
-      m.vs=Math.min(26,m.vs+22*dt+3.2); m.boostCd=0.4;
-      boosterSfx(); spark(marbleWorld(m,_v),10,0x00ffcc,6,5);
-      bo.glow.material.opacity=0.5;
-    }
-  }
-  for(const bo of boosters) bo.glow.material.opacity=Math.max(0.22,bo.glow.material.opacity-dt*1.2);
+function dotColor(m){
+  const map={cateye:'#e53935',susu:'#1e88e5',marmer:'#c62828',laut:'#0d47a1',zamrud:'#1b7a3d',amber:'#ef8f00',ungu:'#5e2b97'};
+  return map[m.pat.key]||'#888';
 }
 
-/* ================= KAMERA SINEMATIK ================= */
-let camMode='leader', camLock=null;
-const camPos=new THREE.Vector3(0,100,40), camTgt=new THREE.Vector3(0,90,0);
-const _p1=new THREE.Vector3(), _p2=new THREE.Vector3();
+/* ================= KAMERA (ikut titik tengah 2 terdepan) ================= */
+let camMode='leader',camLock=null;
+const camPos=new THREE.Vector3(0,100,40),camTgt=new THREE.Vector3(0,90,0);
+const _p1=new THREE.Vector3(),_p2=new THREE.Vector3();
 function leader(){ return [...marbles].sort((a,b)=>b.s-a.s)[0]; }
-function updateCamera(dt){
-  const k=1-Math.exp(-3.2*dt);   // interpolasi halus anti-getar
+function top2mid(out){
+  const r=[...marbles].sort((a,b)=>b.s-a.s);
+  if(r.length>=2){ marbleWorld(r[0],_p1); marbleWorld(r[1],_p2); out.copy(_p1).add(_p2).multiplyScalar(0.5); }
+  else if(r.length) marbleWorld(r[0],out);
+  return out;
+}
+function updateCamera(){
   if(camMode==='orbit'){ controls.enabled=true; controls.update(); return; }
   controls.enabled=false;
   let focus=null;
-  if(camMode==='lock'&&camLock){ focus=camLock; }
-  else if(camMode==='drone'){
+  if(camMode==='lock'&&camLock) focus=camLock;
+  if(camMode==='drone'){
     const mid=[...marbles].sort((a,b)=>b.s-a.s).slice(3,9);
     _p1.set(0,0,0); mid.forEach(m=>_p1.add(marbleWorld(m,_p2))); _p1.divideScalar(Math.max(1,mid.length));
-    const m0=mid[0]||leader();
-    frameAt(m0.s,FR);
-    _p2.copy(_p1).addScaledVector(FR.up,26).addScaledVector(FR.tan,-14);
-    camPos.lerp(_p2,k); camTgt.lerp(_p1,k);
-  } else { // leader / lock
-    const m=focus||leader(); if(!m) return;
-    marbleWorld(m,_p1); frameAt(m.s,FR);
-    _p2.copy(_p1).addScaledVector(FR.tan,-10.5).addScaledVector(FR.up,5.2).addScaledVector(FR.side,3.2);
-    camPos.lerp(_p2,k);
+    const m0=mid[0]||leader(); if(m0){ frameAt(m0.s,FR);
+      _p2.copy(_p1).addScaledVector(FR.up,26).addScaledVector(FR.tan,-14);
+      camPos.lerp(_p2,0.08); camTgt.lerp(_p1,0.1); }
+  } else {
+    const m=focus||null;
+    top2mid(_p1);
+    const ref=m||[...marbles].sort((a,b)=>b.s-a.s)[0];
+    if(m) marbleWorld(m,_p1);
+    if(ref) frameAt(ref.s,FR); else return;
+    _p2.copy(_p1).addScaledVector(FR.tan,-10.5).addScaledVector(FR.up,5.4).addScaledVector(FR.side,3.4);
+    // lerp per-sumbu: X halus (0.06), Y/Z (0.12) — anti goyang
+    camPos.x=lerp(camPos.x,_p2.x,0.06);
+    camPos.y=lerp(camPos.y,_p2.y,0.12);
+    camPos.z=lerp(camPos.z,_p2.z,0.12);
     _p2.copy(_p1).addScaledVector(FR.tan,9);
-    camTgt.lerp(_p2,k);
+    camTgt.x=lerp(camTgt.x,_p2.x,0.06);
+    camTgt.y=lerp(camTgt.y,_p2.y,0.12);
+    camTgt.z=lerp(camTgt.z,_p2.z,0.12);
   }
-  camera.position.copy(camPos);
-  camera.lookAt(camTgt);
-  // matahari mengikuti aksi (bayangan tajam)
-  if(marbles.length){ const f=camLock&&camMode==='lock'?camLock:leader();
-    if(f){ marbleWorld(f,_p1); sun.position.set(_p1.x+30,_p1.y+42,_p1.z+18); sun.target.position.copy(_p1); } }
+  camera.position.copy(camPos); camera.lookAt(camTgt);
 }
 function setCamMode(md,lock=null){
   camMode=md; camLock=lock;
   document.querySelectorAll('.cambtn').forEach(b=>b.classList.toggle('on',b.dataset.cam===(md==='lock'?'leader':md)));
   document.querySelectorAll('#board .row').forEach(r=>r.classList.toggle('lock',lock&&+r.dataset.i===lock.i));
-  if(md==='orbit'){ controls.target.copy(camTgt); }
-}
-
-/* ================= NAME TAGS (billboard 3D->2D) ================= */
-const _pv=new THREE.Vector3();
-function updateTags(){
-  const rank=[...marbles].sort((a,b)=>b.s-a.s);
-  rank.forEach((m,r)=>{
-    _pv.copy(marbleWorld(m,_p2)); _pv.y+=1.9;
-    _pv.project(camera);
-    const el=m.tag, behind=_pv.z>1;
-    if(behind||state==='setup'){ el.style.display='none'; return; }
-    el.style.display='block';
-    el.style.left=((_pv.x*0.5+0.5)*innerWidth)+'px';
-    el.style.top=((-_pv.y*0.5+0.5)*innerHeight)+'px';
-    el.classList.toggle('lead',r===0&&state==='race');
-    el.querySelector('.tx').textContent=(r===0?'👑 #1 ':'#'+(r+1)+' ')+m.name;
-  });
-}
-/* ================= TRAIL ================= */
-function updateTrails(){
-  for(const m of marbles){
-    const p=marbleWorld(m,_p2);
-    m.trailPts.unshift(p.x,p.y,p.z);
-    if(m.trailPts.length>m.trailN*3) m.trailPts.length=m.trailN*3;
-    const posA=m.trail.geometry.attributes.position, colA=m.trail.geometry.attributes.color;
-    const c=new THREE.Color(m.color), n=m.trailPts.length/3;
-    for(let i=0;i<m.trailN;i++){
-      const j=Math.min(i,n-1)*3;
-      posA.setXYZ(i,m.trailPts[j]??p.x,m.trailPts[j+1]??p.y,m.trailPts[j+2]??p.z);
-      const f=Math.pow(1-i/m.trailN,1.6)*(m.vs>7?0.9:0.0);
-      colA.setXYZ(i,c.r*f,c.g*f,c.b*f);
-    }
-    posA.needsUpdate=true; colA.needsUpdate=true;
-    m.trail.visible=m.vs>7&&state==='race';
-    // putaran bola sesuai kecepatan (menggelinding)
-    frameAt(m.s,FR);
-    const w=m.vs/MARBLE_R;
-    m.mesh.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(FR.side,-w*0.016));
-  }
+  if(md==='orbit') controls.target.copy(camTgt);
 }
 
 /* ================= STATE & UI ================= */
-let state='setup', raceTime=0, finishers=[], recArmed=false;
-let recorder=null, recChunks=[], recStartT=0, recUrl=null, recTimer=null;
+let state='setup',raceTime=0,finishers=[],recArmed=false;
+let recorder=null,recChunks=[],recStartT=0,recUrl=null,recTimer=null;
+let compCanvas=null,cctx=null,recording=false;
+let overtakeMsg='',overtakeT=0,prevOrder=[];
+const VW=720,VH=1280;   // output 9:16
 
 function getNames(){
   const lines=$('names').value.split('\n').map(s=>s.trim().toUpperCase()).filter(Boolean);
@@ -882,62 +898,72 @@ function getNames(){
 function newRace(){
   initAudio();
   buildTrack(); buildTrackMesh(); buildObstacles();
-  const names=getNames();
-  buildMarbles(names);
-  finishers=[]; raceTime=0; state='countdown';
+  buildMarbles(getNames());
+  finishers=[]; raceTime=0; state='countdown'; overtakeMsg=''; overtakeT=0; prevOrder=[];
   $('setup').classList.add('hide');
   $('podium').classList.remove('on');
   $('btnDl2').style.display='none'; $('dlWrap').classList.remove('on');
   if(recUrl){ URL.revokeObjectURL(recUrl); recUrl=null; }
   setCamMode('leader');
-  // posisi awal kamera di garis start
   frameAt(10,FR); marbleWorld(marbles[0],_p1);
   camPos.copy(_p1).addScaledVector(FR.tan,-14).addScaledVector(FR.up,8);
   camTgt.copy(_p1).addScaledVector(FR.tan,10);
   camera.position.copy(camPos); camera.lookAt(camTgt);
-  // countdown 3-2-1-GO
   const el=$('count'); el.classList.add('on');
-  let c=3; el.textContent=c; countBeep(false);
+  let c=3; el.textContent=c; countTick(false);
   const iv=setInterval(()=>{
-    c--; if(c>0){ el.textContent=c; countBeep(false); }
-    else { clearInterval(iv); el.textContent='GO!'; countBeep(true);
+    c--;
+    if(c>0){ el.textContent=c; countTick(false); }
+    else{ clearInterval(iv); el.textContent='GO!'; whistle();
       setTimeout(()=>el.classList.remove('on'),700);
       state='race';
-      marbles.forEach(m=>{ m.vs=4.5; m.lastS=m.s; });
+      marbles.forEach(m=>{ m.vs=4.5; m.lastS=m.s; m.prevRank=m.i; });
+      prevOrder=[...marbles].sort((a,b)=>b.s-a.s).map(m=>m.i);
       if(recArmed) startRec();
     }
   },900);
   updateBoard();
 }
+function rankNow(){ return [...marbles].sort((a,b)=>b.s-a.s); }
 function updateBoard(){
-  const rank=[...marbles].sort((a,b)=>b.s-a.s);
+  const rank=rankNow();
   $('leader').textContent='👑 '+(rank[0]?rank[0].name:'-');
   $('board').innerHTML='🏁 <b>Live</b><br>'+rank.map((m,i)=>
     '<div class="row'+(i<3?' r'+(i+1):'')+(camLock===m?' lock':'')+'" data-i="'+m.i+'">'+
-    (i+1)+'. <span style="color:'+m.color+'">●</span> '+m.name+
-    (m.finished?' <span style="color:#ffe082">'+fmtTime(m.finishTime)+'</span>':'')+'</div>').join('');
+    (i+1)+'. <span style="color:'+dotColor(m)+'">●</span> '+m.name+
+    (m.finished?' <span style="color:#7a4a12">'+fmtTime(m.finishTime)+'</span>':'')+'</div>').join('');
   document.querySelectorAll('#board .row').forEach(r=>{
-    r.onclick=()=>{ const m=marbles[+r.dataset.i]; setCamMode('lock',m); };
+    r.onclick=()=>setCamMode('lock',marbles[+r.dataset.i]);
   });
 }
+function detectOvertake(){
+  const rank=rankNow(), order=rank.map(m=>m.i);
+  rank.forEach((m,r)=>{
+    if(m.prevRank!==undefined&&r<m.prevRank&&m.prevRank-r>=1&&r<6){
+      const victim=rank[m.prevRank]||rank[r+1];
+      overtakeMsg='🔥 '+m.name+' menyalip '+(victim?victim.name:'');
+      overtakeT=2.5;
+      const te=$('toast'); te.textContent=overtakeMsg; te.classList.add('on');
+      clearTimeout(te._t); te._t=setTimeout(()=>te.classList.remove('on'),2500);
+    }
+    m.prevRank=r;
+  });
+  prevOrder=order;
+}
 function endRace(){
-  state='podium';
-  stopRec();
-  fanfare();
+  state='podium'; stopRec(); 
   const rank=[...marbles].sort((a,b)=>{
     if(a.finished&&b.finished) return a.finishTime-b.finishTime;
-    if(a.finished) return -1; if(b.finished) return 1; return b.s-a.s;
-  });
+    if(a.finished) return -1; if(b.finished) return 1; return b.s-a.s; });
   $('winName').textContent='🥇 Pemenang: '+rank[0].name+' — '+fmtTime(rank[0].finishTime||raceTime);
   $('podList').innerHTML=rank.map((m,i)=>
     '<div class="pr"><span class="pos">'+(i+1)+'</span>'+
-    '<span class="pdot" style="background:'+m.color+'"></span><span>'+m.name+'</span>'+
+    '<span class="pdot" style="background:'+dotColor(m)+'"></span><span>'+m.name+'</span>'+
     '<span class="tm">'+(m.finished?fmtTime(m.finishTime):Math.round(m.s/FINISH_S*100)+'%')+'</span></div>').join('');
   $('podium').classList.add('on');
-  if(recUrl){ $('btnDl2').style.display='block'; }
+  if(recUrl) $('btnDl2').style.display='block';
   updateBoard();
 }
-// victory cam: orbit mengelilingi pemenang
 let vicAng=0;
 function victoryCam(dt){
   const w=[...marbles].sort((a,b)=>{
@@ -945,25 +971,56 @@ function victoryCam(dt){
     if(a.finished) return -1; if(b.finished) return 1; return b.s-a.s; })[0];
   if(!w) return;
   marbleWorld(w,_p1); vicAng+=dt*0.55;
-  _p2.set(_p1.x+Math.cos(vicAng)*11, _p1.y+4.5, _p1.z+Math.sin(vicAng)*11);
+  _p2.set(_p1.x+Math.cos(vicAng)*11,_p1.y+4.5,_p1.z+Math.sin(vicAng)*11);
   const k=1-Math.exp(-2.5*dt);
   camPos.lerp(_p2,k); camTgt.lerp(_p1,k);
   camera.position.copy(camPos); camera.lookAt(camTgt);
 }
 
-/* ================= RECORDER ================= */
+/* ================= COMPOSITE RECORDER (video bersih 9:16) ================= */
 function pickMime(){
   const cands=['video/mp4','video/webm;codecs=vp9','video/webm'];
   if(window.MediaRecorder) for(const t of cands) if(MediaRecorder.isTypeSupported(t)) return t;
   return '';
 }
+function drawVideoHUD(){
+  // safe zone atas tengah: Top 3 + timer + notifikasi salip
+  cctx.textAlign='center'; cctx.textBaseline='middle';
+  cctx.fillStyle='rgba(255,253,247,.92)';
+  cctx.strokeStyle='rgba(150,110,60,.7)'; cctx.lineWidth=2;
+  cctx.beginPath(); cctx.roundRect(VW/2-210,28,420,118,22); cctx.fill(); cctx.stroke();
+  cctx.fillStyle='#7a4a12'; cctx.font='800 30px Trebuchet MS';
+  cctx.fillText('⏱ '+fmtTime(raceTime),VW/2,58);
+  const rank=rankNow().slice(0,3), medal=['🥇','🥈','🥉'];
+  cctx.font='800 24px Trebuchet MS'; cctx.fillStyle='#3a2c18';
+  cctx.fillText(rank.map((m,i)=>medal[i]+' '+m.name).join('   '),VW/2,108);
+  if(overtakeT>0){
+    cctx.globalAlpha=clamp(overtakeT,0,1);
+    cctx.fillStyle='rgba(255,253,247,.95)';
+    cctx.beginPath(); cctx.roundRect(VW/2-230,168,460,52,18); cctx.fill();
+    cctx.fillStyle='#b3541e'; cctx.font='900 26px Trebuchet MS';
+    cctx.fillText(overtakeMsg,VW/2,195);
+    cctx.globalAlpha=1;
+  }
+}
+function compositeFrame(){
+  if(!compCanvas){ compCanvas=document.createElement('canvas'); compCanvas.width=VW; compCanvas.height=VH;
+    cctx=compCanvas.getContext('2d'); }
+  const vw=innerWidth,vh=innerHeight;
+  const sc=Math.max(VW/vw,VH/vh), dw=vw*sc, dh=vh*sc, dx=(VW-dw)/2, dy=(VH-dh)/2;
+  cctx.fillStyle='#9fd4f5'; cctx.fillRect(0,0,VW,VH);
+  cctx.drawImage(canvas,dx,dy,dw,dh);        // visual 3D
+  cctx.drawImage(labCanvas,dx,dy,dw,dh);     // label overlay
+  drawVideoHUD();                            // skor khusus video
+}
 function startRec(){
   try{
     initAudio();
-    const vs=renderer.domElement.captureStream(30);
+    compositeFrame();
+    const vs=compCanvas.captureStream(30);
     const tracks=[...vs.getVideoTracks(),...mediaDest.stream.getAudioTracks()];
     const mime=pickMime();
-    recorder=new MediaRecorder(new MediaStream(tracks), mime?{mimeType:mime,videoBitsPerSecond:8e6}:undefined);
+    recorder=new MediaRecorder(new MediaStream(tracks),mime?{mimeType:mime,videoBitsPerSecond:10e6}:undefined);
     recChunks=[];
     recorder.ondataavailable=e=>{ if(e.data.size) recChunks.push(e.data); };
     recorder.onstop=()=>{
@@ -971,22 +1028,19 @@ function startRec(){
       recUrl=URL.createObjectURL(blob);
       $('dlWrap').classList.add('on'); $('btnDl2').style.display='block';
     };
-    recorder.start(500);
-    recStartT=Date.now();
+    recorder.start(500); recording=true; recStartT=Date.now();
     $('recBadge').classList.add('on');
     recTimer=setInterval(()=>{ $('recTime').textContent='REC '+fmtTime((Date.now()-recStartT)/1000).slice(0,5); },250);
   }catch(e){ $('err').style.display='block'; $('err').textContent='⚠ Rekam gagal: '+e.message; }
 }
 function stopRec(){
   if(recorder&&recorder.state!=='inactive'){ try{recorder.stop();}catch(e){} }
-  recorder=null; clearInterval(recTimer);
+  recorder=null; recording=false; clearInterval(recTimer);
   $('recBadge').classList.remove('on');
 }
 function downloadRec(){ if(!recUrl) return;
   const a=document.createElement('a'); a.href=recUrl;
-  a.download='balap-kelereng-3d.'+(pickMime().includes('mp4')?'mp4':'webm');
-  a.click();
-}
+  a.download='balap-kelereng-kaca.'+(pickMime().includes('mp4')?'mp4':'webm'); a.click(); }
 
 /* ================= UI WIRING ================= */
 $('btnGo').onclick=()=>{ $('btnStart').disabled=false; newRace(); };
@@ -995,8 +1049,7 @@ $('btnStart').disabled=true;
 $('btnShuffle').onclick=()=>{ seed=(Math.random()*1e9)|0; buildTrack(); buildTrackMesh(); buildObstacles(); };
 $('btnArmRec').onclick=e=>{ recArmed=!recArmed;
   e.target.textContent='⏺ REKAM: '+(recArmed?'ON':'OFF');
-  e.target.classList.toggle('armed',recArmed);
-  $('btnRec').classList.toggle('armed',recArmed); };
+  e.target.classList.toggle('armed',recArmed); $('btnRec').classList.toggle('armed',recArmed); };
 $('btnRec').onclick=()=>$('btnArmRec').click();
 $('btnSound').onclick=e=>{ soundOn=!soundOn; e.target.textContent=soundOn?'🔊':'🔇';
   if(master) master.gain.value=soundOn?0.5:0; };
@@ -1013,41 +1066,48 @@ $('cnt').onchange=e=>{ const v=clamp(parseInt(e.target.value)||12,4,16); e.targe
   $('names').value=cur.slice(0,v).join('\n'); };
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);
+  renderer.setSize(innerWidth,innerHeight); sizeLabels();
 });
 
-/* ================= MAIN LOOP ================= */
+/* ================= MAIN LOOP (fixed substep 1/60) ================= */
 const clock=new THREE.Clock();
-let boardT=0;
+let acc=0,boardT=0;
+const HSTEP=1/60;
 function loop(){
   requestAnimationFrame(loop);
-  const dt=Math.min(0.05,clock.getDelta());
-  const t=clock.elapsedTime;
+  const dt=Math.min(0.1,clock.getDelta()), t=clock.elapsedTime;
   if(state==='race'){
-    // substep fisika agar stabil di semua framerate
-    const n=Math.max(1,Math.min(4,Math.round(dt/0.0167)));
-    const h=dt/n;
-    for(let k=0;k<n;k++) physStep(h,t);
+    acc+=dt;
+    let n=0;
+    while(acc>=HSTEP&&n<4){ physStep(HSTEP); acc-=HSTEP; n++; }
+    if(n===4) acc=0;
     raceTime+=dt;
     $('timer').textContent='⏱ '+fmtTime(raceTime);
-    if(rollGain&&AC) rollGain.gain.value=soundOn?clamp(leader().vs/22,0,0.5)*0.35:0;
-    boardT+=dt; if(boardT>0.5){ boardT=0; updateBoard(); }
+    if(rollGain&&AC) rollGain.gain.value=soundOn?clamp((leader()?leader().vs:0)/22,0,0.5)*0.3:0;
+    boardT+=dt;
+    if(boardT>0.5){ boardT=0; updateBoard(); detectOvertake(); }
+    overtakeT=Math.max(0,overtakeT-dt);
     if(raceTime>RACE_TIMEOUT) endRace();
   } else if(state==='podium'){ victoryCam(dt); }
-  // animasi rintangan
   for(const sp of spinners){ sp.ang+=sp.spd*dt; sp.grp.rotation.y=sp.ang; }
   for(const b of bumpers){ const s=b.ring.scale.x; if(s>1) b.ring.scale.setScalar(Math.max(1,s-dt*3)); }
-  for(const bo of boosters){ bo.mesh.material.opacity=0.8+0.2*Math.sin(t*6); }
   stepParticles(dt);
-  // sinkron mesh kelereng
-  for(const m of marbles){ marbleWorld(m,_p1); m.mesh.position.copy(_p1); }
-  updateTrails();
-  if(state==='race'||state==='podium') updateCamera(dt); else { controls.enabled=false; }
-  updateTags();
+  for(const m of marbles){
+    marbleWorld(m,_p1); m.mesh.position.copy(_p1);
+    // blob shadow menempel di permukaan kayu
+    frameAt(m.s,FR);
+    m.blob.position.copy(FR.pos).addScaledVector(FR.side,m.lat).addScaledVector(FR.up,0.06+m.h*0.15);
+    m.blob.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),FR.up);
+    const bs=1+clamp(m.h*0.12,0,0.8);
+    m.blob.scale.set(bs,bs,1);
+    m.blob.material.opacity=clamp(1-m.h*0.08,0.4,1);
+  }
+  if(state==='race'||state==='podium') updateCamera(); else controls.enabled=false;
+  drawLabels();
   renderer.render(scene,camera);
+  if(recording) compositeFrame();   // gabung 3D+label+skor khusus video
 }
 
-// init tampilan awal (setup): bangun lintasan preview
 buildTrack(); buildTrackMesh(); buildObstacles(); buildMarbles(getNames());
 frameAt(30,FR); marbleWorld(marbles[0],_p1);
 camera.position.copy(_p1).addScaledVector(FR.tan,-26).addScaledVector(FR.up,14);
