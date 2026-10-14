@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>body{margin:0;background:#222;display:flex;flex-wrap:wrap}canvas{margin:10px}</style></head>
+<body>
+<script>
+const designs = [
+  // 1: Gerbang F1
+  (ctx, W) => {
+    ctx.fillStyle = '#2a2a4a'; ctx.fillRect(0, 0, W, 400);
+    // tiang
+    ctx.fillStyle = '#444'; ctx.fillRect(20, 80, 30, 240); ctx.fillRect(W-50, 80, 30, 240);
+    ctx.fillStyle = '#666'; ctx.fillRect(20, 80, 30, 20); ctx.fillRect(W-50, 80, 30, 20);
+    // papan FINISH
+    ctx.fillStyle = '#111'; ctx.fillRect(50, 60, W-100, 70);
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 4; ctx.strokeRect(50, 60, W-100, 70);
+    ctx.fillStyle = '#fff'; ctx.font = '900 44px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('FINISH', W/2, 110);
+    // garis kotak-kotak
+    const sq = 20;
+    for (let c = 0; c < W/sq; c++) {
+      ctx.fillStyle = c % 2 ? '#111' : '#fff';
+      ctx.fillRect(c*sq, 200, sq, sq*2);
+    }
+  },
+  // 2: Pita Emas
+  (ctx, W) => {
+    ctx.fillStyle = '#3a2a1a'; ctx.fillRect(0, 0, W, 400);
+    // pita emas melintang
+    const g = ctx.createLinearGradient(0, 180, 0, 240);
+    g.addColorStop(0, '#fff8dc'); g.addColorStop(0.5, '#ffd700'); g.addColorStop(1, '#b8860b');
+    ctx.fillStyle = g; ctx.fillRect(0, 180, W, 60);
+    ctx.fillStyle = '#8b0000'; ctx.font = '900 36px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('★ FINISH ★', W/2, 222);
+    // tiang emas
+    ctx.fillStyle = '#daa520'; ctx.fillRect(10, 120, 20, 180); ctx.fillRect(W-30, 120, 20, 180);
+    ctx.beginPath(); ctx.arc(20, 110, 15, 0, 7); ctx.arc(W-20, 110, 15, 0, 7); ctx.fill();
+  },
+  // 3: Neon Cyber
+  (ctx, W) => {
+    ctx.fillStyle = '#0a0a1a'; ctx.fillRect(0, 0, W, 400);
+    // garis neon
+    ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 30;
+    ctx.fillStyle = '#00ffff'; ctx.fillRect(0, 190, W, 20);
+    ctx.shadowColor = '#ff00ff'; ctx.fillRect(0, 230, W, 8);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff'; ctx.font = '900 40px Arial'; ctx.textAlign = 'center';
+    ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 20;
+    ctx.fillText('FINISH', W/2, 170);
+    ctx.shadowBlur = 0;
+  },
+  // 4: Bendera Raksasa
+  (ctx, W) => {
+    ctx.fillStyle = '#1a3a1a'; ctx.fillRect(0, 0, W, 400);
+    // tiang bendera
+    ctx.fillStyle = '#8b4513'; ctx.fillRect(W/2-8, 40, 16, 280);
+    // bendera kotak-kotak berkibar
+    const sq = 25;
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 8; c++) {
+      const wave = Math.sin(c * 0.8) * 10;
+      ctx.fillStyle = (r + c) % 2 ? '#111' : '#fff';
+      ctx.fillRect(W/2 + 8 + c*sq, 50 + r*sq + wave, sq, sq);
+    }
+    ctx.fillStyle = '#fff'; ctx.font = '900 36px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('FINISH', W/2, 340);
+  },
+  // 5: Gapura Emas
+  (ctx, W) => {
+    ctx.fillStyle = '#2a1a3a'; ctx.fillRect(0, 0, W, 400);
+    // pilar kiri kanan
+    const pg = ctx.createLinearGradient(0, 0, 40, 0);
+    pg.addColorStop(0, '#8b6914'); pg.addColorStop(0.5, '#ffd700'); pg.addColorStop(1, '#8b6914');
+    ctx.fillStyle = pg; ctx.fillRect(30, 60, 40, 260); ctx.fillRect(W-70, 60, 40, 260);
+    // atap
+    ctx.fillStyle = pg; ctx.fillRect(20, 40, W-40, 40);
+    ctx.fillStyle = '#5a3a0a'; ctx.font = '900 28px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('★ FINISH ★', W/2, 70);
+    // garis finish
+    for (let c = 0; c < W/18; c++) {
+      ctx.fillStyle = c % 2 ? '#111' : '#fff';
+      ctx.fillRect(c*18, 220, 18, 36);
+    }
+  },
+];
+designs.forEach((d, i) => {
+  const c = document.createElement('canvas'); c.width = 540; c.height = 400;
+  document.body.appendChild(c);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.font = '20px Arial'; ctx.fillText('Opsi ' + (i+1), 10, 20);
+  d(ctx, 540);
+  const label = document.createElement('div');
+  label.style.color = '#fff'; label.style.width = '540px'; label.style.textAlign = 'center';
+  label.textContent = ['1. Gerbang F1', '2. Pita Emas', '3. Neon Cyber', '4. Bendera Raksasa', '5. Gapura Emas'][i];
+  document.body.appendChild(label);
+});
+</script>
+</body></html>
